@@ -55,7 +55,7 @@
 
         const geomMastro = new THREE.BoxGeometry(compMastro, bitolaMastro, bitolaMastro);
         const meshMastro = new THREE.Mesh(geomMastro, materialAco);
-        meshMastro.position.set(compMastro / 2 - 0.3, altExt, 0);
+        meshMastro.position.set(-(compMastro / 2 - 0.3), altExt, 0);
         grupoMastroHorizontal.add(meshMastro);
 
         const geomVertExt = new THREE.BoxGeometry(bitolaExt, altExt, bitolaExt);
