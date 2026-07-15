@@ -138,11 +138,46 @@
         renderer.render(scene, camera);
     }
 
+    function coletarDados() {
+        return {
+            larguraPlatibanda: document.getElementById('larguraPlatibanda').value,
+            compMastro: document.getElementById('compMastro').value,
+            bitolaMastro: document.getElementById('bitolaMastro').value,
+            altExt: document.getElementById('altExt').value,
+            bitolaExt: document.getElementById('bitolaExt').value,
+            altInt: document.getElementById('altInt').value,
+            bitolaInt: document.getElementById('bitolaInt').value,
+            compDiag: document.getElementById('compDiag').value,
+            bitolaDiag: document.getElementById('bitolaDiag').value,
+            qtdSuportes: document.getElementById('qtdSuportes').value,
+            resumo: {
+                totalGeral: document.getElementById('totalGeral').innerText,
+                totalBarras: document.getElementById('totalBarras').innerText,
+                custo: document.getElementById('totalCustoSuporte').innerText
+            }
+        };
+    }
+
+    function aplicarDados(dados) {
+        document.getElementById('larguraPlatibanda').value = dados.larguraPlatibanda;
+        document.getElementById('lblPlatibanda').innerText = dados.larguraPlatibanda + ' cm';
+        document.getElementById('compMastro').value = dados.compMastro;
+        document.getElementById('bitolaMastro').value = dados.bitolaMastro;
+        document.getElementById('altExt').value = dados.altExt;
+        document.getElementById('bitolaExt').value = dados.bitolaExt;
+        document.getElementById('altInt').value = dados.altInt;
+        document.getElementById('bitolaInt').value = dados.bitolaInt;
+        document.getElementById('compDiag').value = dados.compDiag;
+        document.getElementById('bitolaDiag').value = dados.bitolaDiag;
+        document.getElementById('qtdSuportes').value = dados.qtdSuportes;
+        atualizarModelo();
+    }
+
     window.addEventListener('resize', resize);
     document.addEventListener('preco-changed', atualizarModelo);
 
     animate();
     atualizarModelo();
 
-    window.SuporteApp = { resize };
+    window.SuporteApp = { resize, coletarDados, aplicarDados };
 })();

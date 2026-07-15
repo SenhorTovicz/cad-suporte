@@ -111,11 +111,39 @@
         renderer.render(scene, camera);
     }
 
+    function coletarDados() {
+        return {
+            larguraVao: document.getElementById('larguraVao').value,
+            alturaVao: document.getElementById('alturaVao').value,
+            bitolaMoldura: document.getElementById('bitolaMoldura').value,
+            bitolaBarras: document.getElementById('bitolaBarras').value,
+            espacamentoBarras: document.getElementById('espacamentoBarras').value,
+            qtdTravessas: document.getElementById('qtdTravessas').value,
+            qtdVaos: document.getElementById('qtdVaos').value,
+            resumo: {
+                totalGeral: document.getElementById('totalGeralGrade').innerText,
+                totalBarras: document.getElementById('totalBarrasGrade').innerText,
+                custo: document.getElementById('totalCustoGrade').innerText
+            }
+        };
+    }
+
+    function aplicarDados(dados) {
+        document.getElementById('larguraVao').value = dados.larguraVao;
+        document.getElementById('alturaVao').value = dados.alturaVao;
+        document.getElementById('bitolaMoldura').value = dados.bitolaMoldura;
+        document.getElementById('bitolaBarras').value = dados.bitolaBarras;
+        document.getElementById('espacamentoBarras').value = dados.espacamentoBarras;
+        document.getElementById('qtdTravessas').value = dados.qtdTravessas;
+        document.getElementById('qtdVaos').value = dados.qtdVaos;
+        atualizarModelo();
+    }
+
     window.addEventListener('resize', resize);
     document.addEventListener('preco-changed', atualizarModelo);
 
     animate();
     atualizarModelo();
 
-    window.GradeApp = { resize };
+    window.GradeApp = { resize, coletarDados, aplicarDados };
 })();
