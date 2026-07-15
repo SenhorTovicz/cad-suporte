@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>CAD Suporte - Simulador de Suportes e Grades</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="topbar">
+        <button class="tab-btn active" data-tab="suporte">Suporte de Tela</button>
+        <button class="tab-btn" data-tab="grade">Grade de Poço</button>
+        <button class="tab-btn" data-tab="historico">Histórico</button>
+        <button id="painel-toggle-btn" data-painel-toggle="painel-suporte">☰ Medidas</button>
+        <div id="precoGlobal">
+            <label for="precoBarra">Preço barra 6m (R$)</label>
+            <input type="number" id="precoBarra" step="0.01" min="0">
+        </div>
+    </div>
+
+    <!-- Suporte de Tela -->
+    <div id="view-suporte" class="view active">
+        <div id="painel-suporte" class="painel">
+            <h3>Controle do Suporte</h3>
+
+            <div style="margin-bottom: 15px;">
+                <label>Ajuste da Platibanda (Mureta)</label>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #3498db; font-weight: bold;">
+                    <span>Abertura:</span>
+                    <span id="lblPlatibanda">23 cm</span>
+                </div>
+                <input type="range" id="larguraPlatibanda" min="10" max="80" value="23" step="1">
+            </div>
+
+            <h3>Dimensões dos Tubos</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Comp. (m)</th>
+                        <th>Bitola (mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mastro Horiz.</td>
+                        <td><input type="number" id="compMastro" value="1.75" step="0.05"></td>
+                        <td><input type="number" id="bitolaMastro" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Coluna Ext. (V)</td>
+                        <td><input type="number" id="altExt" value="0.50" step="0.05"></td>
+                        <td><input type="number" id="bitolaExt" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Coluna Int. (V)</td>
+                        <td><input type="number" id="altInt" value="0.50" step="0.05"></td>
+                        <td><input type="number" id="bitolaInt" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Mão Francesa</td>
+                        <td><input type="number" id="compDiag" value="0.68" step="0.01"></td>
+                        <td><input type="number" id="bitolaDiag" value="60"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h3>Quantidade e Produção</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="qtdSuportes" style="margin: 0; flex: 1;">Qtd. de Suportes:</label>
+                <input type="number" id="qtdSuportes" value="30" min="1" style="width: 70px; padding: 4px;">
+            </div>
+
+            <hr>
+
+            <h3>Consumo e Custo Estimado</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Por Suporte</th>
+                        <th>Total Pedido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tubos Principais</td>
+                        <td><span id="totalTubos">0.00 m</span></td>
+                        <td><b id="totalTubosQtd">0.00 m</b></td>
+                    </tr>
+                    <tr>
+                        <td>Mão Francesa</td>
+                        <td><span id="totalDiag">0.00 m</span></td>
+                        <td><b id="totalDiagQtd">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-total">
+                        <td>Total Linear</td>
+                        <td><span>-</span></td>
+                        <td><b id="totalGeral" style="color: #0288d1;">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-barras">
+                        <td>Barras de Ferro (6m)</td>
+                        <td><span>-</span></td>
+                        <td><b id="totalBarras" style="color: #2e7d32;">0.00 barras</b></td>
+                    </tr>
+                    <tr class="linha-custo">
+                        <td>Custo Total</td>
+                        <td><span>-</span></td>
+                        <td><b id="totalCustoSuporte" style="color: #d35400;">R$ 0,00</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn-salvar" onclick="salvarOrcamentoAtual('suporte')">💾 Salvar Orçamento</button>
+        </div>
+        <div id="canvas-suporte" class="canvas-container"></div>
+    </div>
+
+    <!-- Grade de Poço de Elevador -->
+    <div id="view-grade" class="view">
+        <div id="painel-grade" class="painel">
+            <h3>Vão do Poço</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Medida</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Largura do vão (m)</td>
+                        <td><input type="number" id="larguraVao" value="1.20" step="0.05"></td>
+                    </tr>
+                    <tr>
+                        <td>Altura do vão (m)</td>
+                        <td><input type="number" id="alturaVao" value="2.10" step="0.05"></td>
+                    </tr>
+                    <tr>
+                        <td>Bitola moldura (mm)</td>
+                        <td><input type="number" id="bitolaMoldura" value="50"></td>
+                    </tr>
+                    <tr>
+                        <td>Bitola das barras (mm)</td>
+                        <td><input type="number" id="bitolaBarras" value="25"></td>
+                    </tr>
+                    <tr>
+                        <td>Espaçamento barras (cm)</td>
+                        <td><input type="number" id="espacamentoBarras" value="12" step="1"></td>
+                    </tr>
+                    <tr>
+                        <td>Travessas horizontais</td>
+                        <td><input type="number" id="qtdTravessas" value="1" min="0" step="1"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h3>Quantidade</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="qtdVaos" style="margin: 0; flex: 1;">Qtd. de Grades (vãos):</label>
+                <input type="number" id="qtdVaos" value="1" min="1" style="width: 70px; padding: 4px;">
+            </div>
+
+            <hr>
+
+            <h3>Consumo e Custo Estimado</h3>
+            <table class="tabela-parametros">
+                <tbody>
+                    <tr>
+                        <td>Barras verticais internas</td>
+                        <td><b id="numBarrasVerticais">0</b></td>
+                    </tr>
+                    <tr>
+                        <td>Moldura (perímetro)</td>
+                        <td><b id="totalMoldura">0.00 m</b></td>
+                    </tr>
+                    <tr>
+                        <td>Barras/travessas internas</td>
+                        <td><b id="totalBarrasInternas">0.00 m</b></td>
+                    </tr>
+                    <tr>
+                        <td>Total por vão</td>
+                        <td><b id="totalPorVao">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-total">
+                        <td>Total Linear Geral</td>
+                        <td><b id="totalGeralGrade" style="color: #0288d1;">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-barras">
+                        <td>Barras de Ferro (6m)</td>
+                        <td><b id="totalBarrasGrade" style="color: #2e7d32;">0.00 barras</b></td>
+                    </tr>
+                    <tr class="linha-custo">
+                        <td>Custo Total</td>
+                        <td><b id="totalCustoGrade" style="color: #d35400;">R$ 0,00</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn-salvar" onclick="salvarOrcamentoAtual('grade')">💾 Salvar Orçamento</button>
+        </div>
+        <div id="canvas-grade" class="canvas-container"></div>
+    </div>
+
+    <!-- Histórico de Orçamentos -->
+    <div id="view-historico" class="view">
+        <div class="historico-wrap">
+            <h2>Histórico de Orçamentos</h2>
+            <p style="color:#7f8c8d; font-size: 13px;">Orçamentos salvos ficam guardados neste dispositivo/navegador. Clique em "Carregar" para reabrir as medidas na simulação.</p>
+            <div class="tabela-scroll">
+                <table id="tabela-historico">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Data</th>
+                            <th>Total Linear</th>
+                            <th>Custo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-historico-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bibliotecas 3D (empacotadas localmente, funciona offline) -->
+    <script src="js/lib/three.min.js"></script>
+    <script src="js/lib/OrbitControls.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        initPrecoBarra(() => document.dispatchEvent(new Event('preco-changed')));
+        initPainelToggle();
+    </script>
+    <script src="js/suporte.js"></script>
+    <script src="js/grade.js"></script>
+    <script>
+        initTabs((aba) => {
+            if (aba === 'suporte') {
+                document.getElementById('painel-toggle-btn').dataset.painelToggle = 'painel-suporte';
+                document.getElementById('painel-toggle-btn').style.display = '';
+                requestAnimationFrame(() => window.SuporteApp.resize());
+            } else if (aba === 'grade') {
+                document.getElementById('painel-toggle-btn').dataset.painelToggle = 'painel-grade';
+                document.getElementById('painel-toggle-btn').style.display = '';
+                requestAnimationFrame(() => window.GradeApp.resize());
+            } else {
+                document.getElementById('painel-toggle-btn').style.display = 'none';
+                renderHistorico();
+            }
+        });
+
+        renderHistorico();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
