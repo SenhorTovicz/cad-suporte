@@ -61,11 +61,24 @@
 
         const topY = Math.max(altExt, altInt);
 
+        // ---- PEÇA 2 (posições): Mão francesa (coluna vertical + diagonal + luvas) ----
+        // 1ª luva encosta a coluna da mão francesa na face interna da platibanda
+        const xLuvaA = bitolaExt / 2 + largPlatibanda + bitolaInt / 2;
+        // 2ª luva: onde a diagonal encontra o mastro (mão francesa mais aberta = mais longe)
+        const alcanceDiag = Math.sqrt(Math.max(compDiag * compDiag - altInt * altInt, 0.0001));
+        const xLuvaB = xLuvaA + alcanceDiag;
+        const anguloDiag = Math.atan2(altInt, alcanceDiag);
+        const ladoLuva = bitolaMastro + 0.02;
+
         // ---- PEÇA 1: L (mastro horizontal + coluna vertical soldada) ----
+        // Segurança: o mastro nunca fica curto a ponto de a 2ª luva sair da barra.
+        // Em uso normal o comprimento é exatamente o digitado; só estende no extremo.
+        const compMastroEfetivo = Math.max(compMastro, xLuvaB + ladoLuva / 2 + 0.04);
+
         // Mastro horizontal (barra de 1,75), da coluna do L para fora
-        const geomMastro = new THREE.BoxGeometry(compMastro, bitolaMastro, bitolaMastro);
+        const geomMastro = new THREE.BoxGeometry(compMastroEfetivo, bitolaMastro, bitolaMastro);
         const meshMastro = new THREE.Mesh(geomMastro, materialAco);
-        meshMastro.position.set(compMastro / 2, topY, 0);
+        meshMastro.position.set(compMastroEfetivo / 2, topY, 0);
         grupoMastroHorizontal.add(meshMastro);
 
         // Coluna do L (barra vertical soldada na ponta do mastro), face externa
@@ -80,10 +93,7 @@
         platibandaMesh.position.set(bitolaExt / 2 + largPlatibanda / 2, topY - altExt / 2, 0);
         scene.add(platibandaMesh);
 
-        // ---- PEÇA 2: Mão francesa (coluna vertical + diagonal + 2 luvas) ----
-        // 1ª luva encosta a coluna da mão francesa na face interna da platibanda
-        const xLuvaA = bitolaExt / 2 + largPlatibanda + bitolaInt / 2;
-
+        // ---- PEÇA 2 (desenho): coluna vertical + diagonal + 2 luvas ----
         // Coluna vertical da mão francesa (barra de 0,50), face interna
         const geomColMF = new THREE.BoxGeometry(bitolaInt, altInt, bitolaInt);
         const meshColMF = new THREE.Mesh(geomColMF, materialAco);
@@ -91,17 +101,13 @@
         grupoMastroHorizontal.add(meshColMF);
 
         // Diagonal: da base da coluna da mão francesa até a 2ª luva no mastro
-        const alcanceDiag = Math.sqrt(Math.max(compDiag * compDiag - altInt * altInt, 0.0001));
-        const xLuvaB = xLuvaA + alcanceDiag;
-        const anguloDiag = Math.atan2(altInt, alcanceDiag);
         const geomDiag = new THREE.BoxGeometry(compDiag, bitolaDiag, bitolaDiag);
         const meshDiag = new THREE.Mesh(geomDiag, materialAco);
         meshDiag.rotation.z = anguloDiag;
         meshDiag.position.set((xLuvaA + xLuvaB) / 2, topY - altInt / 2, 0);
         grupoMastroHorizontal.add(meshDiag);
 
-        // Duas luvas nas pontas da mão francesa, correndo pela barra de 1,75
-        const ladoLuva = bitolaMastro + 0.02;
+        // Duas luvas nas pontas da mão francesa, correndo pela barra do mastro
         const geomLuva = new THREE.BoxGeometry(0.1, ladoLuva, ladoLuva);
 
         const luvaA = new THREE.Mesh(geomLuva, materialLuva);
@@ -112,7 +118,7 @@
         luvaB.position.set(xLuvaB, topY, 0);
         grupoMastroHorizontal.add(luvaB);
 
-        const metros1SuporteTubos = compMastro + altExt + altInt;
+        const metros1SuporteTubos = compMastroEfetivo + altExt + altInt;
         const metros1SuporteDiag = compDiag;
 
         const totalMetrosTubosPedido = metros1SuporteTubos * qtdSuportes;
