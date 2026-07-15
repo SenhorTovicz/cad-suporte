@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cad-suporte-v1';
+const CACHE_NAME = 'cad-suporte-v2';
 
 const ARQUIVOS_APP = [
     './',
@@ -31,20 +31,18 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// Network-first: sempre busca a versão mais nova primeiro (essencial enquanto o
+// app está em desenvolvimento ativo). Só cai para o cache se estiver offline.
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
-        caches.match(event.request).then((respostaCache) => {
-            if (respostaCache) return respostaCache;
-
-            return fetch(event.request)
-                .then((respostaRede) => {
-                    const copia = respostaRede.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
-                    return respostaRede;
-                })
-                .catch(() => caches.match('./index.html'));
-        })
+        fetch(event.request)
+            .then((respostaRede) => {
+                const copia = respostaRede.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+                return respostaRede;
+            })
+            .catch(() => caches.match(event.request).then((r) => r || caches.match('./index.html')))
     );
 });
