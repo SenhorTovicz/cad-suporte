@@ -28,15 +28,12 @@
     const materialConcreto = new THREE.MeshLambertMaterial({ color: 0x95a5a6 });
 
     const grupoMastroHorizontal = new THREE.Group();
-    const grupoVRegulagemHorizontal = new THREE.Group();
     scene.add(grupoMastroHorizontal);
-    scene.add(grupoVRegulagemHorizontal);
 
     let platibandaMesh;
 
     function atualizarModelo() {
         while (grupoMastroHorizontal.children.length > 0) grupoMastroHorizontal.remove(grupoMastroHorizontal.children[0]);
-        while (grupoVRegulagemHorizontal.children.length > 0) grupoVRegulagemHorizontal.remove(grupoVRegulagemHorizontal.children[0]);
         if (platibandaMesh) scene.remove(platibandaMesh);
 
         const compMastro = parseFloat(document.getElementById('compMastro').value) || 0;
@@ -53,46 +50,38 @@
 
         const qtdSuportes = parseInt(document.getElementById('qtdSuportes').value) || 1;
 
-        const geomMastro = new THREE.BoxGeometry(compMastro, bitolaMastro, bitolaMastro);
-        const meshMastro = new THREE.Mesh(geomMastro, materialAco);
-        meshMastro.position.set(-(compMastro / 2 - 0.3), altExt, 0);
-        grupoMastroHorizontal.add(meshMastro);
-
+        // Poste vertical (fixado na platibanda) - vai do chão até o topo, onde encontra o mastro
         const geomVertExt = new THREE.BoxGeometry(bitolaExt, altExt, bitolaExt);
         const meshVertExt = new THREE.Mesh(geomVertExt, materialAco);
-        const posColFixaX = -0.3 + largPlatibanda + bitolaExt / 2;
-        meshVertExt.position.set(posColFixaX, altExt / 2, 0);
+        meshVertExt.position.set(0, altExt / 2, 0);
         grupoMastroHorizontal.add(meshVertExt);
 
-        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altExt, 0.6);
-        platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
-        platibandaMesh.position.set(posColFixaX - bitolaExt / 2 - largPlatibanda / 2, altExt / 2, 0);
-        scene.add(platibandaMesh);
-
+        // Tubo interno de regulagem (telescópico), sobreposto ao poste principal
         const geomVertInt = new THREE.BoxGeometry(bitolaInt, altInt, bitolaInt);
         const meshVertInt = new THREE.Mesh(geomVertInt, materialAco);
-        meshVertInt.position.set(0, -altInt / 2, 0);
-        grupoVRegulagemHorizontal.add(meshVertInt);
+        meshVertInt.position.set(0, altInt / 2, 0);
+        grupoMastroHorizontal.add(meshVertInt);
 
-        const geomLuvaEsq = new THREE.BoxGeometry(0.12, bitolaMastro + 0.015, bitolaMastro + 0.015);
-        const meshLuvaEsq = new THREE.Mesh(geomLuvaEsq, materialAco);
-        meshLuvaEsq.position.set(0, 0, 0);
-        grupoVRegulagemHorizontal.add(meshLuvaEsq);
+        // Mastro horizontal, apoiado no topo do poste e se estendendo para fora
+        const geomMastro = new THREE.BoxGeometry(compMastro, bitolaMastro, bitolaMastro);
+        const meshMastro = new THREE.Mesh(geomMastro, materialAco);
+        meshMastro.position.set(compMastro / 2, altExt, 0);
+        grupoMastroHorizontal.add(meshMastro);
 
-        const distHorizontalDiag = compDiag * 0.707;
-        const geomDiag = new THREE.BoxGeometry(bitolaDiag, compDiag, bitolaDiag);
+        // Mão francesa (diagonal), ligando a base do poste a um ponto do mastro
+        const alcanceHorizontalDiag = Math.sqrt(Math.max(compDiag * compDiag - altExt * altExt, 0.0001));
+        const anguloDiag = Math.atan2(altExt, alcanceHorizontalDiag);
+        const geomDiag = new THREE.BoxGeometry(compDiag, bitolaDiag, bitolaDiag);
         const meshDiag = new THREE.Mesh(geomDiag, materialAco);
-        meshDiag.rotation.z = Math.PI / 4;
-        meshDiag.position.set(-distHorizontalDiag / 2, -distHorizontalDiag / 2, 0);
-        grupoVRegulagemHorizontal.add(meshDiag);
+        meshDiag.rotation.z = anguloDiag;
+        meshDiag.position.set(alcanceHorizontalDiag / 2, altExt / 2, 0);
+        grupoMastroHorizontal.add(meshDiag);
 
-        const geomLuvaDir = new THREE.BoxGeometry(0.12, bitolaMastro + 0.015, bitolaMastro + 0.015);
-        const meshLuvaDir = new THREE.Mesh(geomLuvaDir, materialAco);
-        meshLuvaDir.position.set(-distHorizontalDiag, 0, 0);
-        grupoVRegulagemHorizontal.add(meshLuvaDir);
-
-        const posXRegulagem = posColFixaX - bitolaExt / 2 - largPlatibanda - bitolaInt / 2;
-        grupoVRegulagemHorizontal.position.set(posXRegulagem, altExt, 0);
+        // Platibanda (mureta), encostada atrás do poste
+        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altExt, 0.6);
+        platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
+        platibandaMesh.position.set(-bitolaExt / 2 - largPlatibanda / 2, altExt / 2, 0);
+        scene.add(platibandaMesh);
 
         const metros1SuporteTubos = compMastro + altExt + altInt;
         const metros1SuporteDiag = compDiag;
