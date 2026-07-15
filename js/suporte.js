@@ -51,74 +51,68 @@
 
         const qtdSuportes = parseInt(document.getElementById('qtdSuportes').value) || 1;
 
-        // O suporte funciona como um SARGENTO (grampo): o poste vertical é a
-        // "costela" fixa encostada na face externa da platibanda, e um pé em
-        // "C" na base agarra a mureta por baixo/pela face interna. O mastro sai
-        // do topo, apoiado por uma mão francesa. Duas luvas fazem as emendas.
+        // O suporte tem DUAS peças:
+        //  PEÇA 1 - "L": barra horizontal (mastro 1,75) soldada numa coluna
+        //           vertical (0,50). Encaixa na face externa da platibanda.
+        //  PEÇA 2 - "Mão francesa": uma coluna vertical (0,50) + uma diagonal,
+        //           formando o triângulo de sustentação. Nas suas duas pontas
+        //           há duas LUVAS que correm pela barra de 1,75 do L, para
+        //           regular o aperto conforme a espessura da platibanda.
 
-        // Ponto da mão francesa no mastro (segunda luva)
-        const alcanceHorizontalDiag = Math.sqrt(Math.max(compDiag * compDiag - altExt * altExt, 0.0001));
-        const anguloDiag = Math.atan2(altExt, alcanceHorizontalDiag);
+        const topY = Math.max(altExt, altInt);
 
-        // 1. Poste vertical (costela do sargento), encostado na face externa da platibanda
-        const geomVertExt = new THREE.BoxGeometry(bitolaExt, altExt, bitolaExt);
-        const meshVertExt = new THREE.Mesh(geomVertExt, materialAco);
-        meshVertExt.position.set(0, altExt / 2, 0);
-        grupoMastroHorizontal.add(meshVertExt);
-
-        // 2. Tubo interno de regulagem (telescópico), corre dentro do poste
-        const geomVertInt = new THREE.BoxGeometry(bitolaInt, altInt, bitolaInt);
-        const meshVertInt = new THREE.Mesh(geomVertInt, materialAco);
-        meshVertInt.position.set(0, altInt / 2, 0);
-        grupoMastroHorizontal.add(meshVertInt);
-
-        // 3. Pé do sargento: braço horizontal por baixo da platibanda + mordente
-        //    que sobe pela face interna, apertando a mureta (o "aperto" do grampo)
-        const larguraGrampo = bitolaExt / 2 + largPlatibanda + bitolaExt / 2;
-        const geomBraco = new THREE.BoxGeometry(larguraGrampo, bitolaExt, bitolaExt);
-        const meshBraco = new THREE.Mesh(geomBraco, materialAco);
-        meshBraco.position.set(-largPlatibanda / 2, bitolaExt / 2, 0);
-        grupoMastroHorizontal.add(meshBraco);
-
-        const alturaMordente = Math.min(altExt * 0.35, 0.25);
-        const geomMordente = new THREE.BoxGeometry(bitolaExt, alturaMordente, bitolaExt);
-        const meshMordente = new THREE.Mesh(geomMordente, materialAco);
-        const xMordente = -bitolaExt / 2 - largPlatibanda - bitolaExt / 2;
-        meshMordente.position.set(xMordente, alturaMordente / 2, 0);
-        grupoMastroHorizontal.add(meshMordente);
-
-        // 4. Mastro horizontal, apoiado no topo do poste e se estendendo para fora
+        // ---- PEÇA 1: L (mastro horizontal + coluna vertical soldada) ----
+        // Mastro horizontal (barra de 1,75), da coluna do L para fora
         const geomMastro = new THREE.BoxGeometry(compMastro, bitolaMastro, bitolaMastro);
         const meshMastro = new THREE.Mesh(geomMastro, materialAco);
-        meshMastro.position.set(compMastro / 2, altExt, 0);
+        meshMastro.position.set(compMastro / 2, topY, 0);
         grupoMastroHorizontal.add(meshMastro);
 
-        // 5. Mão francesa (diagonal), da base do poste até a segunda luva no mastro
+        // Coluna do L (barra vertical soldada na ponta do mastro), face externa
+        const geomColL = new THREE.BoxGeometry(bitolaExt, altExt, bitolaExt);
+        const meshColL = new THREE.Mesh(geomColL, materialAco);
+        meshColL.position.set(0, topY - altExt / 2, 0);
+        grupoMastroHorizontal.add(meshColL);
+
+        // ---- Platibanda (mureta), apertada entre as duas colunas ----
+        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altExt, 0.22);
+        platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
+        platibandaMesh.position.set(bitolaExt / 2 + largPlatibanda / 2, topY - altExt / 2, 0);
+        scene.add(platibandaMesh);
+
+        // ---- PEÇA 2: Mão francesa (coluna vertical + diagonal + 2 luvas) ----
+        // 1ª luva encosta a coluna da mão francesa na face interna da platibanda
+        const xLuvaA = bitolaExt / 2 + largPlatibanda + bitolaInt / 2;
+
+        // Coluna vertical da mão francesa (barra de 0,50), face interna
+        const geomColMF = new THREE.BoxGeometry(bitolaInt, altInt, bitolaInt);
+        const meshColMF = new THREE.Mesh(geomColMF, materialAco);
+        meshColMF.position.set(xLuvaA, topY - altInt / 2, 0);
+        grupoMastroHorizontal.add(meshColMF);
+
+        // Diagonal: da base da coluna da mão francesa até a 2ª luva no mastro
+        const alcanceDiag = Math.sqrt(Math.max(compDiag * compDiag - altInt * altInt, 0.0001));
+        const xLuvaB = xLuvaA + alcanceDiag;
+        const anguloDiag = Math.atan2(altInt, alcanceDiag);
         const geomDiag = new THREE.BoxGeometry(compDiag, bitolaDiag, bitolaDiag);
         const meshDiag = new THREE.Mesh(geomDiag, materialAco);
         meshDiag.rotation.z = anguloDiag;
-        meshDiag.position.set(alcanceHorizontalDiag / 2, altExt / 2, 0);
+        meshDiag.position.set((xLuvaA + xLuvaB) / 2, topY - altInt / 2, 0);
         grupoMastroHorizontal.add(meshDiag);
 
-        // 6. Luvas (emendas): uma sobre o poste, outra onde entra a mão francesa
+        // Duas luvas nas pontas da mão francesa, correndo pela barra de 1,75
         const ladoLuva = bitolaMastro + 0.02;
         const geomLuva = new THREE.BoxGeometry(0.1, ladoLuva, ladoLuva);
 
-        const luva1 = new THREE.Mesh(geomLuva, materialLuva);
-        luva1.position.set(0, altExt, 0);
-        grupoMastroHorizontal.add(luva1);
+        const luvaA = new THREE.Mesh(geomLuva, materialLuva);
+        luvaA.position.set(xLuvaA, topY, 0);
+        grupoMastroHorizontal.add(luvaA);
 
-        const luva2 = new THREE.Mesh(geomLuva, materialLuva);
-        luva2.position.set(alcanceHorizontalDiag, altExt, 0);
-        grupoMastroHorizontal.add(luva2);
+        const luvaB = new THREE.Mesh(geomLuva, materialLuva);
+        luvaB.position.set(xLuvaB, topY, 0);
+        grupoMastroHorizontal.add(luvaB);
 
-        // 7. Platibanda (mureta), apertada dentro do "C" do sargento
-        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altExt, 0.22);
-        platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
-        platibandaMesh.position.set(-bitolaExt / 2 - largPlatibanda / 2, altExt / 2, 0);
-        scene.add(platibandaMesh);
-
-        const metros1SuporteTubos = compMastro + altExt + altInt + larguraGrampo + alturaMordente;
+        const metros1SuporteTubos = compMastro + altExt + altInt;
         const metros1SuporteDiag = compDiag;
 
         const totalMetrosTubosPedido = metros1SuporteTubos * qtdSuportes;
