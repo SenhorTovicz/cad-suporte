@@ -351,7 +351,7 @@
                 toggleBtn.dataset.painelToggle = APPS[aba];
                 toggleBtn.style.display = '';
                 const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp }[aba];
-                requestAnimationFrame(() => app.resize());
+                requestAnimationFrame(() => { if (app && app.resize) app.resize(); });
             } else {
                 toggleBtn.style.display = 'none';
                 renderHistorico();
