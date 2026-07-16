@@ -148,48 +148,48 @@
         const compPe = Math.min(baseReach, 0.5) + 0.05;
         addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
 
-        // ===== Motor guincho (tipo Winch 3000lb) no topo do mastro =====
-        // Placa de fixação, corpo do motor + tambor com cabo, e gancho do lado do vão
-        const xWinch = 0.10;
-        const yWinch = alturaTorre + 0.07;
+        // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar da mão francesa =====
+        // Fica na altura do colar (luva), virado com o tambor/gancho para fora
+        // (lado do vão), afastado do suporte. Eixo do conjunto ao longo de x.
+        const yWinch = alturaMF;
+        const xMotor = 0.16;   // corpo do motor (perto do colar)
+        const xTambor = 0.30;  // tambor + cabo (mais afastado do suporte)
 
-        const geomPlaca = new THREE.BoxGeometry(0.09, 0.02, 0.30);
-        const placa = new THREE.Mesh(geomPlaca, materialFuro);
-        placa.position.set(xWinch, alturaTorre + 0.015, 0);
-        grupo.add(placa);
+        // Braço de fixação do colar até o motor
+        addBarra(xMotor, bitolaTorre * 0.7, xMotor / 2, yWinch, 0, 'x', materialFuro);
 
-        // Corpo do motor (cilindro escuro, eixo em z)
+        // Corpo do motor (cilindro escuro, eixo em x)
         const geomMotor = new THREE.CylinderGeometry(0.05, 0.05, 0.13, 20);
         const motor = new THREE.Mesh(geomMotor, materialMotorBody);
-        motor.rotation.x = Math.PI / 2;
-        motor.position.set(xWinch, yWinch, -0.10);
+        motor.rotation.z = Math.PI / 2;
+        motor.position.set(xMotor, yWinch, 0);
         grupo.add(motor);
 
-        // Tambor com cabo de aço (cilindro metálico, eixo em z)
+        // Tambor com cabo de aço (cilindro metálico, eixo em x)
         const geomTambor = new THREE.CylinderGeometry(0.048, 0.048, 0.14, 20);
         const tambor = new THREE.Mesh(geomTambor, materialTambor);
-        tambor.rotation.x = Math.PI / 2;
-        tambor.position.set(xWinch, yWinch, 0.06);
+        tambor.rotation.z = Math.PI / 2;
+        tambor.position.set(xTambor, yWinch, 0);
         grupo.add(tambor);
 
-        for (const zf of [-0.01, 0.13]) {
+        for (const xf of [xTambor - 0.07, xTambor + 0.07]) {
             const geomFlange = new THREE.CylinderGeometry(0.058, 0.058, 0.012, 20);
             const flange = new THREE.Mesh(geomFlange, materialFuro);
-            flange.rotation.x = Math.PI / 2;
-            flange.position.set(xWinch, yWinch, zf);
+            flange.rotation.z = Math.PI / 2;
+            flange.position.set(xf, yWinch, 0);
             grupo.add(flange);
         }
 
-        // Cabo desce do tambor até o gancho, do lado do vão
-        const alturaGancho = Math.min(alturaTorre * 0.7, 0.9);
+        // Cabo desce do tambor até o gancho, do lado do vão (afastado do suporte)
+        const alturaGancho = Math.min(alturaMF + espLaje + 0.35, 1.0);
         const geomCabo = new THREE.CylinderGeometry(0.006, 0.006, alturaGancho, 8);
         const cabo = new THREE.Mesh(geomCabo, materialTambor);
-        cabo.position.set(xWinch, yWinch - 0.05 - alturaGancho / 2, 0.06);
+        cabo.position.set(xTambor, yWinch - 0.05 - alturaGancho / 2, 0);
         grupo.add(cabo);
 
         const geomGancho = new THREE.TorusGeometry(0.04, 0.012, 8, 16, Math.PI * 1.5);
         const gancho = new THREE.Mesh(geomGancho, materialAco);
-        gancho.position.set(xWinch, yWinch - 0.05 - alturaGancho - 0.03, 0.06);
+        gancho.position.set(xTambor, yWinch - 0.05 - alturaGancho - 0.03, 0);
         grupo.add(gancho);
 
         // ============ CAIXA (fonte + bateria, tipo USINA BOB) sobre a laje ============
