@@ -128,6 +128,22 @@
         const totalBarras = Math.ceil(totalGeralMetros / 6);
         const custoTotal = totalBarras * getPrecoBarra();
 
+        // ---- Peso do aço (para galvanização, cobrada por kg) ----
+        // Tubo de perfil vazado: peso = comprimento(m) × área da seção(mm²) × 0,00785
+        // (aço a 7850 kg/m³). Usa a espessura de parede informada.
+        const parede = lerNumInput('paredeTubo'); // mm
+        function pesoTubo(compM, bitolaM) {
+            const b = bitolaM * 1000; // mm
+            const interno = Math.max(0, b - 2 * parede);
+            const areaMM2 = b * b - interno * interno;
+            return compM * areaMM2 * 0.00785; // kg
+        }
+        const peso1Suporte = pesoTubo(compMastroEfetivo, bitolaMastro)
+            + pesoTubo(altExt, bitolaExt)
+            + pesoTubo(altInt, bitolaInt)
+            + pesoTubo(compDiag, bitolaDiag);
+        const pesoTotal = peso1Suporte * qtdSuportes;
+
         document.getElementById('totalTubos').innerText = metros1SuporteTubos.toFixed(2) + ' m';
         document.getElementById('totalTubosQtd').innerText = totalMetrosTubosPedido.toFixed(2) + ' m';
 
@@ -136,10 +152,12 @@
 
         document.getElementById('totalGeral').innerText = totalGeralMetros.toFixed(2) + ' m';
         document.getElementById('totalBarras').innerText = totalBarras + ' barras (de 6m)';
+        document.getElementById('totalPeso').innerText = peso1Suporte.toFixed(2) + ' kg';
+        document.getElementById('totalPesoQtd').innerText = pesoTotal.toFixed(2) + ' kg';
         document.getElementById('totalCustoSuporte').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['compMastro', 'bitolaMastro', 'altExt', 'bitolaExt', 'altInt', 'bitolaInt', 'compDiag', 'bitolaDiag', 'qtdSuportes'];
+    const listaInputs = ['compMastro', 'bitolaMastro', 'altExt', 'bitolaExt', 'altInt', 'bitolaInt', 'compDiag', 'bitolaDiag', 'qtdSuportes', 'paredeTubo'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
     });
