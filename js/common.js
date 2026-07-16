@@ -62,12 +62,26 @@ function salvarListaOrcamentos(lista) {
     localStorage.setItem(ORCAMENTOS_KEY, JSON.stringify(lista));
 }
 
+const TIPO_LABELS = {
+    suporte: 'Suporte de Tela',
+    grade: 'Grade de Poço',
+    guincho: 'Guincho'
+};
+
+function getApp(tipo) {
+    return {
+        suporte: window.SuporteApp,
+        grade: window.GradeApp,
+        guincho: window.GuinchoApp
+    }[tipo];
+}
+
 function salvarOrcamentoAtual(tipo) {
-    const nomePadrao = tipo === 'suporte' ? 'Suporte de Tela' : 'Grade de Poço';
+    const nomePadrao = TIPO_LABELS[tipo] || 'Orçamento';
     const nome = window.prompt('Nome para este orçamento:', nomePadrao);
     if (!nome) return;
 
-    const app = tipo === 'suporte' ? window.SuporteApp : window.GradeApp;
+    const app = getApp(tipo);
     const dados = app.coletarDados();
 
     const orcamento = {
@@ -97,7 +111,7 @@ function carregarOrcamento(id) {
 
     document.querySelector(`.tab-btn[data-tab="${orcamento.tipo}"]`).click();
 
-    const app = orcamento.tipo === 'suporte' ? window.SuporteApp : window.GradeApp;
+    const app = getApp(orcamento.tipo);
     app.aplicarDados(orcamento.dados);
 }
 
@@ -114,7 +128,7 @@ function renderHistorico() {
     }
 
     lista.forEach(o => {
-        const tipoLabel = o.tipo === 'suporte' ? 'Suporte de Tela' : 'Grade de Poço';
+        const tipoLabel = TIPO_LABELS[o.tipo] || o.tipo;
         const tr = document.createElement('tr');
 
         const tdNome = document.createElement('td');

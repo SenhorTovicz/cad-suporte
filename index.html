@@ -18,6 +18,7 @@
     <div id="topbar">
         <button class="tab-btn active" data-tab="suporte">Suporte de Tela</button>
         <button class="tab-btn" data-tab="grade">Grade de Poço</button>
+        <button class="tab-btn" data-tab="guincho">Guincho</button>
         <button class="tab-btn" data-tab="historico">Histórico</button>
         <button id="painel-toggle-btn" data-painel-toggle="painel-suporte">☰ Medidas</button>
         <div id="precoGlobal">
@@ -214,6 +215,110 @@
         <div id="canvas-grade" class="canvas-container"></div>
     </div>
 
+    <!-- Guincho de Coluna -->
+    <div id="view-guincho" class="view">
+        <div id="painel-guincho" class="painel">
+            <h3>Guincho de Coluna (na laje)</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Comp. (m)</th>
+                        <th>Bitola (mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Torre (coluna)</td>
+                        <td><input type="number" id="alturaTorre" value="1.20" step="0.05"></td>
+                        <td><input type="number" id="bitolaTorre" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Suporte c/ furos</td>
+                        <td><input type="number" id="alturaSuporte" value="0.60" step="0.05"></td>
+                        <td><input type="number" id="bitolaSuporte" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Braço (lança)</td>
+                        <td><input type="number" id="compBraco" value="1.00" step="0.05"></td>
+                        <td><input type="number" id="bitolaBraco" value="60"></td>
+                    </tr>
+                    <tr>
+                        <td>Mão francesa (diag.)</td>
+                        <td><input type="number" id="compDiagG" value="1.40" step="0.05"></td>
+                        <td><input type="number" id="bitolaDiagG" value="50"></td>
+                    </tr>
+                    <tr>
+                        <td>Barra roscada</td>
+                        <td><input type="number" id="compRosca" value="0.30" step="0.05"></td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Laje</h3>
+            <table class="tabela-parametros">
+                <tbody>
+                    <tr>
+                        <td>Espessura da laje (m)</td>
+                        <td><input type="number" id="espLaje" value="0.20" step="0.01"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h3>Quantidade</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="qtdGuinchos" style="margin: 0; flex: 1;">Qtd. de Guinchos:</label>
+                <input type="number" id="qtdGuinchos" value="1" min="1" style="width: 70px; padding: 4px;">
+            </div>
+
+            <hr>
+
+            <h3>Consumo e Custo Estimado</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Por Guincho</th>
+                        <th>Total Pedido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tubos (torre+suporte+braço)</td>
+                        <td><span id="gTotalTubos">0.00 m</span></td>
+                        <td><b id="gTotalTubosQtd">0.00 m</b></td>
+                    </tr>
+                    <tr>
+                        <td>Mão francesa</td>
+                        <td><span id="gTotalDiag">0.00 m</span></td>
+                        <td><b id="gTotalDiagQtd">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-total">
+                        <td>Total Linear</td>
+                        <td><span>-</span></td>
+                        <td><b id="gTotalGeral" style="color: #0288d1;">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-barras">
+                        <td>Barras de Ferro (6m)</td>
+                        <td><span>-</span></td>
+                        <td><b id="gTotalBarras" style="color: #2e7d32;">0.00 barras</b></td>
+                    </tr>
+                    <tr class="linha-custo">
+                        <td>Custo Total</td>
+                        <td><span>-</span></td>
+                        <td><b id="gTotalCusto" style="color: #d35400;">R$ 0,00</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn-salvar" onclick="salvarOrcamentoAtual('guincho')">💾 Salvar Orçamento</button>
+        </div>
+        <div id="canvas-guincho" class="canvas-container"></div>
+    </div>
+
     <!-- Histórico de Orçamentos -->
     <div id="view-historico" class="view">
         <div class="historico-wrap">
@@ -247,18 +352,18 @@
     </script>
     <script src="js/suporte.js"></script>
     <script src="js/grade.js"></script>
+    <script src="js/guincho.js"></script>
     <script>
+        const toggleBtn = document.getElementById('painel-toggle-btn');
+        const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho' };
         initTabs((aba) => {
-            if (aba === 'suporte') {
-                document.getElementById('painel-toggle-btn').dataset.painelToggle = 'painel-suporte';
-                document.getElementById('painel-toggle-btn').style.display = '';
-                requestAnimationFrame(() => window.SuporteApp.resize());
-            } else if (aba === 'grade') {
-                document.getElementById('painel-toggle-btn').dataset.painelToggle = 'painel-grade';
-                document.getElementById('painel-toggle-btn').style.display = '';
-                requestAnimationFrame(() => window.GradeApp.resize());
+            if (APPS[aba]) {
+                toggleBtn.dataset.painelToggle = APPS[aba];
+                toggleBtn.style.display = '';
+                const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp }[aba];
+                requestAnimationFrame(() => app.resize());
             } else {
-                document.getElementById('painel-toggle-btn').style.display = 'none';
+                toggleBtn.style.display = 'none';
                 renderHistorico();
             }
         });
