@@ -78,7 +78,9 @@
         const alturaMF = lerNumInput('alturaMF');
         const compDiagG = lerNumInput('compDiagG');
         const compRosca = lerNumInput('compRosca');
+        const compPeL = lerNumInput('compPeL');   // pé (horizontal) do L do mastro
         const espLaje = lerNumInput('espLaje');
+        const vaoFrente = 0.05;                    // folga entre a frente do suporte e a laje
 
         const larguraCaixa = lerNumInput('larguraCaixa');
         const alturaCaixa = lerNumInput('alturaCaixa');
@@ -106,7 +108,8 @@
             const profLaje = Math.max(0.9, 1.9 * baseReach + 0.4);
             const geomLaje = new THREE.BoxGeometry(largLaje, espLaje, profLaje);
             lajeMesh = new THREE.Mesh(geomLaje, materialConcreto);
-            lajeMesh.position.set(-largLaje / 2, -espLaje / 2, 0);
+            // Borda da laje recuada (deixa uma folga na frente do suporte)
+            lajeMesh.position.set(-largLaje / 2 - vaoFrente, -espLaje / 2, 0);
             scene.add(lajeMesh);
         }
 
@@ -197,11 +200,11 @@
             grupo.add(knob);
         }
 
-        // ============ PEÇA MÓVEL: MASTRO (cavalete) que passa pela luva ============
-        // No modo laje desce até ficar rente à barra que engata sob a laje; no modo
-        // platibanda começa no nível do telhado (a mureta é apertada pelo sargento).
-        const descidaMast = ehLaje ? espLaje + bitolaTorre : 0;
-        const alturaMastroTotal = alturaTorre + descidaMast;
+        // ============ PEÇA MÓVEL: MASTRO em L (cavalete) que passa pela luva ============
+        // Parte vertical (maior, com furos) sobe pela luva; parte de baixo (pé) é
+        // horizontal e vai para trás, apoiando sobre a laje. O canto do L fica em y=0.
+        const descidaMast = 0;
+        const alturaMastroTotal = alturaTorre;
         addBarra(alturaMastroTotal, bitolaTorre, 0, alturaTorre - alturaMastroTotal / 2, 0, 'y');
 
         // Furos: na LUVA (é onde entra o pino de fixação) e no trecho do mastro que
@@ -228,10 +231,11 @@
         pino.position.set(0, alturaMF * 0.55, 0);
         grupo.add(pino);
 
-        // Pé/gancho sob a laje (só no modo laje; parte da peça do mastro, engata por baixo)
-        const compPe = ehLaje ? Math.min(baseReach, 0.5) + 0.05 : 0;
+        // Pé horizontal do L (só no modo laje): vai do canto do mastro para trás,
+        // apoiado no topo da laje (forma o L junto com a parte vertical).
+        const compPe = ehLaje ? compPeL : 0;
         if (ehLaje) {
-            addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
+            addBarra(compPeL, bitolaTorre, -compPeL / 2 + bitolaTorre / 2, bitolaTorre / 2, 0, 'x');
         }
 
         // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar por uma chapa =====
@@ -239,7 +243,7 @@
         // fixação (chapa + 2 parafusos) fica ATRÁS, do lado do mastro; o cabo de
         // aço sai pela FRENTE (lado do vão) e desce até o gancho.
         const yWinch = alturaMF;
-        const zMotor = -0.07;  // chapa/motor jogados um pouco para a esquerda (fora do centro)
+        const zMotor = 0.05;   // chapa/motor jogados para a direita (fora do centro)
         const motorSide = ehLaje ? 1 : -1;  // platibanda: motor voltado para o lado de dentro
         const xChapa = 0.04 * motorSide;    // chapa soldada na luva
         const xWinch = 0.14 * motorSide;    // corpo do guincho
@@ -248,12 +252,12 @@
         const zCabo = ehLaje ? zMotor + 0.065 : 0;
         const yCaboTop = ehLaje ? yWinch : yBoom;
 
-        // Chapa de ferro soldada na luva — suporte de fixação com 2 parafusos
-        const geomChapa = new THREE.BoxGeometry(0.014, ladoLuva * 1.7, 0.24);
+        // Chapa de ferro soldada na luva (25 cm), fora do centro, com 2 parafusos a 10 cm
+        const geomChapa = new THREE.BoxGeometry(0.014, ladoLuva * 1.7, 0.25);
         const chapa = new THREE.Mesh(geomChapa, materialAco);
         chapa.position.set(xChapa, yWinch, zMotor);
         grupo.add(chapa);
-        for (const dz of [-0.08, 0.08]) {
+        for (const dz of [-0.05, 0.05]) {
             const parafuso = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 10), materialFuro);
             parafuso.rotation.z = Math.PI / 2;
             parafuso.position.set(xChapa + 0.014 * motorSide, yWinch, zMotor + dz);
@@ -356,7 +360,7 @@
         document.getElementById('gTotalCusto').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['modoFixacao', 'alturaTorre', 'alturaMF', 'compDiagG', 'compRosca', 'espLaje',
+    const listaInputs = ['modoFixacao', 'alturaTorre', 'compPeL', 'alturaMF', 'compDiagG', 'compRosca', 'espLaje',
         'alturaMureta', 'espMureta', 'larguraCaixa', 'alturaCaixa', 'profCaixa',
         'bitolaTorre', 'bitolaDiagG', 'qtdGuinchos'];
     listaInputs.forEach(id => {
