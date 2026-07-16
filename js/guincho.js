@@ -13,7 +13,7 @@
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, 0.9, 0);
+    controls.target.set(0, 0.5, 0);
 
     const light1 = new THREE.DirectionalLight(0xffffff, 1.2);
     light1.position.set(5, 10, 7);
@@ -30,6 +30,7 @@
     const materialMotor = new THREE.MeshStandardMaterial({ color: 0xe67e22, roughness: 0.5, metalness: 0.6 });
     const materialFuro = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.6, metalness: 0.3 });
     const materialRosca = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5, metalness: 0.6 });
+    const materialBorracha = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, roughness: 0.9, metalness: 0.05 });
 
     const grupo = new THREE.Group();
     scene.add(grupo);
@@ -56,80 +57,83 @@
         limpar();
 
         const alturaTorre = parseFloat(document.getElementById('alturaTorre').value) || 0;
-        const alturaSuporte = parseFloat(document.getElementById('alturaSuporte').value) || 0;
-        const compBraco = parseFloat(document.getElementById('compBraco').value) || 0;
         const compDiagG = parseFloat(document.getElementById('compDiagG').value) || 0;
         const compRosca = parseFloat(document.getElementById('compRosca').value) || 0;
         const espLaje = parseFloat(document.getElementById('espLaje').value) || 0;
 
         const bitolaTorre = (parseFloat(document.getElementById('bitolaTorre').value) || 0) / 1000;
-        const bitolaBraco = (parseFloat(document.getElementById('bitolaBraco').value) || 0) / 1000;
         const bitolaDiagG = (parseFloat(document.getElementById('bitolaDiagG').value) || 0) / 1000;
-        const bitolaSuporte = (parseFloat(document.getElementById('bitolaSuporte').value) || 0) / 1000;
 
         const qtdGuinchos = parseInt(document.getElementById('qtdGuinchos').value) || 1;
 
-        // Laje (topo em y=0, estende-se para a esquerda; borda direita em x=0)
-        const largLaje = 1.1;
+        // Base da mão francesa (invertida): vai do topo do mastro para dentro da laje
+        const baseReach = Math.sqrt(Math.max(compDiagG * compDiagG - alturaTorre * alturaTorre, 0.0001));
+
+        // Laje (topo em y=0, borda direita em x=0, estende-se para a esquerda)
+        const largLaje = Math.max(1.1, baseReach + 0.4);
         const profLaje = 0.8;
         const geomLaje = new THREE.BoxGeometry(largLaje, espLaje, profLaje);
         lajeMesh = new THREE.Mesh(geomLaje, materialConcreto);
         lajeMesh.position.set(-largLaje / 2, -espLaje / 2, 0);
         scene.add(lajeMesh);
 
-        // Torre vertical (coluna), da laje para cima
-        addBarra(alturaTorre, bitolaTorre, 0, alturaTorre / 2, 0, 'y');
+        // Mastro vertical com furos (guincho no topo), na borda da laje.
+        // Desce um pouco abaixo da laje para o pé engatar por baixo (sargento).
+        const descidaPe = espLaje + 0.10;
+        const alturaMastroTotal = alturaTorre + descidaPe;
+        addBarra(alturaMastroTotal, bitolaTorre, 0, alturaTorre - alturaMastroTotal / 2, 0, 'y');
 
-        // Suporte com furos, descendo pela borda da laje (regula altura)
-        addBarra(alturaSuporte, bitolaSuporte, 0, -alturaSuporte / 2, 0, 'y');
-
-        // Furos no suporte (discos escuros na face frontal)
-        const nFuros = Math.max(2, Math.floor(alturaSuporte / 0.12));
-        const rFuro = bitolaSuporte * 0.28;
+        // Furos no mastro (regulam a altura) — discos escuros na face frontal
+        const nFuros = Math.max(3, Math.floor(alturaTorre / 0.12));
+        const rFuro = bitolaTorre * 0.28;
         for (let i = 0; i < nFuros; i++) {
-            const y = -0.07 - i * (Math.max(alturaSuporte - 0.14, 0.01) / Math.max(nFuros - 1, 1));
+            const y = 0.10 + i * (Math.max(alturaTorre - 0.20, 0.01) / Math.max(nFuros - 1, 1));
             const geomFuro = new THREE.CylinderGeometry(rFuro, rFuro, 0.01, 16);
             const furo = new THREE.Mesh(geomFuro, materialFuro);
             furo.rotation.x = Math.PI / 2;
-            furo.position.set(0, y, bitolaSuporte / 2 + 0.002);
+            furo.position.set(0, y, bitolaTorre / 2 + 0.002);
             grupo.add(furo);
         }
 
-        // Pé sob a laje (engata por baixo, ligando torre/suporte à laje)
-        const compPe = 0.45;
-        addBarra(compPe, bitolaSuporte, -compPe / 2 + bitolaSuporte / 2, -espLaje - bitolaSuporte / 2, 0, 'x');
+        // Pé sob a laje (mordente de baixo do sargento)
+        const compPe = Math.min(baseReach, 0.5) + 0.05;
+        addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
 
-        // Barra roscada em cima da laje (aperta/regula), com manípulo
-        const xRosca = -0.18;
-        addBarra(compRosca, bitolaTorre * 0.5, xRosca, compRosca / 2, 0, 'y', materialRosca);
-        const geomKnob = new THREE.CylinderGeometry(bitolaTorre * 0.55, bitolaTorre * 0.55, bitolaTorre * 0.5, 12);
-        const knob = new THREE.Mesh(geomKnob, materialFuro);
-        knob.position.set(xRosca, compRosca, 0);
-        grupo.add(knob);
+        // Base horizontal sobre a laje (onde a mão francesa apoia e a rosca aperta)
+        addBarra(baseReach, bitolaTorre, -baseReach / 2, bitolaTorre / 2, 0, 'x');
 
-        // Braço (lança) horizontal no topo da torre, estende-se para fora
-        const alcanceDiag = Math.sqrt(Math.max(compDiagG * compDiagG - alturaTorre * alturaTorre, 0.0001));
-        const xPontaDiag = alcanceDiag;
-        const compBracoEfetivo = Math.max(compBraco, xPontaDiag + 0.05);
-        addBarra(compBracoEfetivo, bitolaBraco, compBracoEfetivo / 2, alturaTorre, 0, 'x');
-
-        // Mão francesa (diagonal), da base da torre até um ponto do braço
-        const anguloDiag = Math.atan2(alturaTorre, alcanceDiag);
+        // Mão francesa INVERTIDA: do topo do mastro até a ponta da base sobre a laje
+        const anguloDiag = Math.atan2(alturaTorre, baseReach);
         const geomDiag = new THREE.BoxGeometry(compDiagG, bitolaDiagG, bitolaDiagG);
         const meshDiag = new THREE.Mesh(geomDiag, materialAco);
         meshDiag.rotation.z = anguloDiag;
-        meshDiag.position.set(alcanceDiag / 2, alturaTorre / 2, 0);
+        meshDiag.position.set(-baseReach / 2, alturaTorre / 2, 0);
         grupo.add(meshDiag);
 
-        // Motor guincho na ponta do braço (tambor + gancho + cabo)
-        const xMotor = compBracoEfetivo;
-        const geomMotor = new THREE.CylinderGeometry(0.09, 0.09, 0.2, 16);
+        // Barra roscada com base de borracha, apertando na laje (na ponta da base)
+        const xRosca = -baseReach + bitolaTorre / 2;
+        const baseBorrachaH = 0.03;
+        const geomBorracha = new THREE.BoxGeometry(0.11, baseBorrachaH, 0.11);
+        const borracha = new THREE.Mesh(geomBorracha, materialBorracha);
+        borracha.position.set(xRosca, baseBorrachaH / 2, 0);
+        grupo.add(borracha);
+
+        addBarra(compRosca, bitolaTorre * 0.5, xRosca, baseBorrachaH + compRosca / 2, 0, 'y', materialRosca);
+        const geomKnob = new THREE.CylinderGeometry(bitolaTorre * 0.55, bitolaTorre * 0.55, bitolaTorre * 0.5, 12);
+        const knob = new THREE.Mesh(geomKnob, materialFuro);
+        knob.position.set(xRosca, baseBorrachaH + compRosca, 0);
+        grupo.add(knob);
+
+        // Motor guincho no topo do mastro, com cabo e gancho para o lado do vão (borda)
+        const xMotor = 0.12;
+        addBarra(xMotor + bitolaTorre / 2, bitolaTorre * 0.7, xMotor / 2, alturaTorre, 0, 'x'); // suporte do motor
+        const geomMotor = new THREE.CylinderGeometry(0.08, 0.08, 0.18, 16);
         const motor = new THREE.Mesh(geomMotor, materialMotor);
         motor.rotation.x = Math.PI / 2;
         motor.position.set(xMotor, alturaTorre + 0.02, 0);
         grupo.add(motor);
 
-        const alturaGancho = Math.min(alturaTorre * 0.6, 0.9);
+        const alturaGancho = Math.min(alturaTorre * 0.7, 0.9);
         const geomCabo = new THREE.CylinderGeometry(0.006, 0.006, alturaGancho, 8);
         const cabo = new THREE.Mesh(geomCabo, materialFuro);
         cabo.position.set(xMotor, alturaTorre - alturaGancho / 2, 0);
@@ -141,7 +145,7 @@
         grupo.add(gancho);
 
         // ---- Cálculo de material ----
-        const metrosTubos = alturaTorre + alturaSuporte + compBracoEfetivo + compPe;
+        const metrosTubos = alturaMastroTotal + baseReach + compPe;
         const metrosDiag = compDiagG;
         const metrosRosca = compRosca;
         const metrosPorGuincho = metrosTubos + metrosDiag + metrosRosca;
@@ -161,8 +165,8 @@
         document.getElementById('gTotalCusto').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['alturaTorre', 'alturaSuporte', 'compBraco', 'compDiagG', 'compRosca', 'espLaje',
-        'bitolaTorre', 'bitolaBraco', 'bitolaDiagG', 'bitolaSuporte', 'qtdGuinchos'];
+    const listaInputs = ['alturaTorre', 'compDiagG', 'compRosca', 'espLaje',
+        'bitolaTorre', 'bitolaDiagG', 'qtdGuinchos'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
     });
