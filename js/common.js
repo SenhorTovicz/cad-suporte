@@ -5,6 +5,18 @@ function formatBRL(valor) {
     return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+// Lê um input numérico já protegido contra vazio/NaN e valores negativos.
+function lerNumInput(id, min = 0) {
+    const v = parseFloat(document.getElementById(id).value);
+    return Math.max(min, isNaN(v) ? 0 : v);
+}
+
+// Lê um input inteiro (quantidades) com mínimo (1 por padrão).
+function lerIntInput(id, min = 1) {
+    const v = parseInt(document.getElementById(id).value, 10);
+    return Math.max(min, isNaN(v) ? min : v);
+}
+
 function getPrecoBarra() {
     const input = document.getElementById('precoBarra');
     const valor = parseFloat(input.value);

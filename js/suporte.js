@@ -37,19 +37,19 @@
         while (grupoMastroHorizontal.children.length > 0) grupoMastroHorizontal.remove(grupoMastroHorizontal.children[0]);
         if (platibandaMesh) scene.remove(platibandaMesh);
 
-        const compMastro = parseFloat(document.getElementById('compMastro').value) || 0;
-        const altExt = parseFloat(document.getElementById('altExt').value) || 0;
-        const altInt = parseFloat(document.getElementById('altInt').value) || 0;
-        const compDiag = parseFloat(document.getElementById('compDiag').value) || 0;
+        const compMastro = lerNumInput('compMastro');
+        const altExt = lerNumInput('altExt');
+        const altInt = lerNumInput('altInt');
+        const compDiag = lerNumInput('compDiag');
 
-        const bitolaMastro = (parseFloat(document.getElementById('bitolaMastro').value) || 0) / 1000;
-        const bitolaExt = (parseFloat(document.getElementById('bitolaExt').value) || 0) / 1000;
-        const bitolaInt = (parseFloat(document.getElementById('bitolaInt').value) || 0) / 1000;
-        const bitolaDiag = (parseFloat(document.getElementById('bitolaDiag').value) || 0) / 1000;
+        const bitolaMastro = lerNumInput('bitolaMastro') / 1000;
+        const bitolaExt = lerNumInput('bitolaExt') / 1000;
+        const bitolaInt = lerNumInput('bitolaInt') / 1000;
+        const bitolaDiag = lerNumInput('bitolaDiag') / 1000;
 
-        const largPlatibanda = (parseFloat(document.getElementById('larguraPlatibanda').value) || 0) / 100;
+        const largPlatibanda = lerNumInput('larguraPlatibanda') / 100;
 
-        const qtdSuportes = parseInt(document.getElementById('qtdSuportes').value) || 1;
+        const qtdSuportes = lerIntInput('qtdSuportes');
 
         // O suporte tem DUAS peças:
         //  PEÇA 1 - "L": barra horizontal (mastro 1,75) soldada numa coluna
