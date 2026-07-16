@@ -142,6 +142,11 @@
     window.addEventListener('resize', resize);
     document.addEventListener('preco-changed', atualizarModelo);
 
+    // Redimensiona automaticamente quando a aba fica visível (evita canvas 0x0)
+    if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => resize()).observe(container);
+    }
+
     animate();
     atualizarModelo();
 
