@@ -227,7 +227,14 @@
     <!-- Guincho de Coluna -->
     <div id="view-guincho" class="view">
         <div id="painel-guincho" class="painel">
-            <h3>Guincho de Coluna (na laje)</h3>
+            <h3>Guincho de Coluna</h3>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <label for="modoFixacao" style="margin: 0; flex: 1;">Fixação:</label>
+                <select id="modoFixacao" style="padding: 5px; border-radius: 4px; border: 1px solid #bdc3c7; font-size: 12px;">
+                    <option value="laje">Na laje</option>
+                    <option value="platibanda">Na platibanda (mureta)</option>
+                </select>
+            </div>
             <table class="tabela-parametros">
                 <thead>
                     <tr>
@@ -278,15 +285,33 @@
                 </tbody>
             </table>
 
-            <h3>Laje</h3>
-            <table class="tabela-parametros">
-                <tbody>
-                    <tr>
-                        <td>Espessura da laje (m)</td>
-                        <td><input type="number" id="espLaje" value="0.20" step="0.01"></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div id="secao-laje">
+                <h3>Laje</h3>
+                <table class="tabela-parametros">
+                    <tbody>
+                        <tr>
+                            <td>Espessura da laje (m)</td>
+                            <td><input type="number" id="espLaje" value="0.20" step="0.01"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="secao-platibanda" style="display: none;">
+                <h3>Platibanda (mureta)</h3>
+                <table class="tabela-parametros">
+                    <tbody>
+                        <tr>
+                            <td>Altura da mureta (m)</td>
+                            <td><input type="number" id="alturaMureta" value="0.50" step="0.05"></td>
+                        </tr>
+                        <tr>
+                            <td>Espessura da mureta (m)</td>
+                            <td><input type="number" id="espMureta" value="0.20" step="0.01"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <hr>
 
