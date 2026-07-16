@@ -57,6 +57,20 @@
         return mesh;
     }
 
+    // Barra (perfil quadrado) ligando dois pontos 3D quaisquer — usada nas diagonais.
+    function addBarraEntrePontos(x1, y1, z1, x2, y2, z2, bitola, material) {
+        const p1 = new THREE.Vector3(x1, y1, z1);
+        const p2 = new THREE.Vector3(x2, y2, z2);
+        const dir = new THREE.Vector3().subVectors(p2, p1);
+        const len = dir.length();
+        const geom = new THREE.BoxGeometry(bitola, len, bitola);
+        const mesh = new THREE.Mesh(geom, material || materialAco);
+        mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+        grupo.add(mesh);
+        return mesh;
+    }
+
     function atualizarModelo() {
         limpar();
 
@@ -80,48 +94,52 @@
 
         // Laje (topo em y=0, borda direita em x=0, estende-se para a esquerda)
         const largLaje = Math.max(1.2, baseReach + larguraCaixa + 0.6);
-        const profLaje = 0.9;
+        const profLaje = Math.max(0.9, 1.9 * baseReach + 0.4);
         const geomLaje = new THREE.BoxGeometry(largLaje, espLaje, profLaje);
         lajeMesh = new THREE.Mesh(geomLaje, materialConcreto);
         lajeMesh.position.set(-largLaje / 2, -espLaje / 2, 0);
         scene.add(lajeMesh);
 
         // ============ PEÇA FIXA: MÃO FRANCESA (presa na laje) ============
-        // Base horizontal sobre a laje (apoia e a barra roscada aperta)
-        addBarra(baseReach, bitolaTorre, -baseReach / 2, bitolaTorre / 2, 0, 'x');
-
-        // Diagonal: do colar (0, alturaMF) até a ponta da base (-baseReach, 0)
-        const anguloDiag = Math.atan2(alturaMF, baseReach);
-        const geomDiag = new THREE.BoxGeometry(compDiagG, bitolaDiagG, bitolaDiagG);
-        const meshDiag = new THREE.Mesh(geomDiag, materialAco);
-        meshDiag.rotation.z = anguloDiag;
-        meshDiag.position.set(-baseReach / 2, alturaMF / 2, 0);
-        grupo.add(meshDiag);
-
-        // Colar (luva) por onde o mastro passa — em (0, alturaMF)
+        // Colar (luva) por onde o mastro passa — apex das 3 mãos francesas
         const ladoColar = bitolaTorre + 0.035;
         const geomColar = new THREE.BoxGeometry(ladoColar, ladoColar * 1.6, ladoColar);
         const colar = new THREE.Mesh(geomColar, materialColar);
         colar.position.set(0, alturaMF, 0);
         grupo.add(colar);
 
-        // Barra roscada com base de borracha, apertando na laje (na ponta da base)
-        const xRosca = -baseReach + bitolaTorre / 2;
-        const baseBorrachaH = 0.03;
-        const geomBorracha = new THREE.BoxGeometry(0.11, baseBorrachaH, 0.11);
-        const borracha = new THREE.Mesh(geomBorracha, materialBorracha);
-        borracha.position.set(xRosca, baseBorrachaH / 2, 0);
-        grupo.add(borracha);
+        // Uma mão francesa = base na laje + diagonal (colar→pé) + barra roscada c/ borracha.
+        // Três iguais: a do meio (para o vão) e duas laterais, travando o tombamento p/ os lados.
+        function addMaoFrancesa(fx, fz) {
+            // Base sobre a laje: do pé do mastro até o pé da mão francesa
+            addBarraEntrePontos(0, bitolaTorre / 2, 0, fx, bitolaTorre / 2, fz, bitolaTorre, materialAco);
+            // Diagonal: do colar até o pé (mesmo comprimento nas três)
+            addBarraEntrePontos(0, alturaMF, 0, fx, 0, fz, bitolaDiagG, materialAco);
 
-        addBarra(compRosca, bitolaTorre * 0.5, xRosca, baseBorrachaH + compRosca / 2, 0, 'y', materialRosca);
-        const geomKnob = new THREE.CylinderGeometry(bitolaTorre * 0.55, bitolaTorre * 0.55, bitolaTorre * 0.5, 12);
-        const knob = new THREE.Mesh(geomKnob, materialFuro);
-        knob.position.set(xRosca, baseBorrachaH + compRosca, 0);
-        grupo.add(knob);
+            const borracha = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.03, 0.11), materialBorracha);
+            borracha.position.set(fx, 0.015, fz);
+            grupo.add(borracha);
+
+            const rosca = new THREE.Mesh(new THREE.BoxGeometry(bitolaTorre * 0.5, compRosca, bitolaTorre * 0.5), materialRosca);
+            rosca.position.set(fx, 0.03 + compRosca / 2, fz);
+            grupo.add(rosca);
+
+            const knob = new THREE.Mesh(new THREE.CylinderGeometry(bitolaTorre * 0.55, bitolaTorre * 0.55, bitolaTorre * 0.5, 12), materialFuro);
+            knob.position.set(fx, 0.03 + compRosca, fz);
+            grupo.add(knob);
+        }
+
+        const splay = 65 * Math.PI / 180;
+        const fxSide = -baseReach * Math.cos(splay);
+        const fzSide = baseReach * Math.sin(splay);
+        addMaoFrancesa(-baseReach, 0);      // do meio (para o vão)
+        addMaoFrancesa(fxSide, fzSide);     // lateral 1
+        addMaoFrancesa(fxSide, -fzSide);    // lateral 2
 
         // ============ PEÇA MÓVEL: MASTRO (cavalete) que passa pelo colar ============
-        // Mastro vertical: desce sob a laje (gancho) e sobe até o topo (guincho)
-        const descidaMast = espLaje + 0.16;
+        // Mastro vertical: sobe (sobra = regulagem) e desce até ficar RENTE com a
+        // barra horizontal que engata por baixo da laje.
+        const descidaMast = espLaje + bitolaTorre;
         const alturaMastroTotal = alturaTorre + descidaMast;
         addBarra(alturaMastroTotal, bitolaTorre, 0, alturaTorre - alturaMastroTotal / 2, 0, 'y');
 
@@ -157,6 +175,18 @@
 
         // Braço de fixação do colar até o motor
         addBarra(xMotor, bitolaTorre * 0.7, xMotor / 2, yWinch, 0, 'x', materialFuro);
+
+        // Chapa de ferro soldada na luva (colar) para fixar o motor — 2 parafusos
+        const geomChapa = new THREE.BoxGeometry(0.012, ladoColar * 1.8, ladoColar * 1.6);
+        const chapa = new THREE.Mesh(geomChapa, materialAco);
+        chapa.position.set(0.05, yWinch, 0);
+        grupo.add(chapa);
+        for (const dz of [-1, 1]) {
+            const parafuso = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 10), materialFuro);
+            parafuso.rotation.z = Math.PI / 2;
+            parafuso.position.set(0.062, yWinch, dz * ladoColar * 0.5);
+            grupo.add(parafuso);
+        }
 
         // Corpo do motor (cilindro escuro, eixo em x)
         const geomMotor = new THREE.CylinderGeometry(0.05, 0.05, 0.13, 20);
@@ -223,9 +253,10 @@
         }
 
         // ---- Cálculo de material ----
-        const metrosTubos = alturaMastroTotal + compPe + baseReach;
-        const metrosDiag = compDiagG;
-        const metrosRosca = compRosca;
+        // 3 mãos francesas: 3 diagonais + 3 bases na laje + 3 barras roscadas
+        const metrosTubos = alturaMastroTotal + compPe + 3 * baseReach;
+        const metrosDiag = 3 * compDiagG;
+        const metrosRosca = 3 * compRosca;
         const metrosPorGuincho = metrosTubos + metrosDiag + metrosRosca;
 
         const totalTubos = metrosTubos * qtdGuinchos;
