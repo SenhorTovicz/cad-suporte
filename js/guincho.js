@@ -89,16 +89,26 @@
 
         const qtdGuinchos = lerIntInput('qtdGuinchos');
 
+        // Modo de fixação: 'laje' (apoia na laje, tripé) ou 'platibanda' (aperta a mureta)
+        const modo = document.getElementById('modoFixacao').value;
+        const ehLaje = modo !== 'platibanda';
+        const alturaMureta = lerNumInput('alturaMureta');
+        const espMureta = lerNumInput('espMureta');
+        document.getElementById('secao-laje').style.display = ehLaje ? '' : 'none';
+        document.getElementById('secao-platibanda').style.display = ehLaje ? 'none' : '';
+
         // Mão francesa: colar em (0, alturaMF); base vai até (-baseReach, 0) sobre a laje
         const baseReach = Math.sqrt(Math.max(compDiagG * compDiagG - alturaMF * alturaMF, 0.0001));
 
-        // Laje (topo em y=0, borda direita em x=0, estende-se para a esquerda)
-        const largLaje = Math.max(1.2, baseReach + larguraCaixa + 0.6);
-        const profLaje = Math.max(0.9, 1.9 * baseReach + 0.4);
-        const geomLaje = new THREE.BoxGeometry(largLaje, espLaje, profLaje);
-        lajeMesh = new THREE.Mesh(geomLaje, materialConcreto);
-        lajeMesh.position.set(-largLaje / 2, -espLaje / 2, 0);
-        scene.add(lajeMesh);
+        if (ehLaje) {
+            // Laje (topo em y=0, borda direita em x=0, estende-se para a esquerda)
+            const largLaje = Math.max(1.2, baseReach + larguraCaixa + 0.6);
+            const profLaje = Math.max(0.9, 1.9 * baseReach + 0.4);
+            const geomLaje = new THREE.BoxGeometry(largLaje, espLaje, profLaje);
+            lajeMesh = new THREE.Mesh(geomLaje, materialConcreto);
+            lajeMesh.position.set(-largLaje / 2, -espLaje / 2, 0);
+            scene.add(lajeMesh);
+        }
 
         // ============ PEÇA FIXA: MÃO FRANCESA (presa na laje) ============
         // Luva (60x60) por onde o mastro (50x50) corre: vai da base — onde chegam os
@@ -144,17 +154,53 @@
             grupo.add(knob);
         }
 
-        const splay = 65 * Math.PI / 180;
-        const fxSide = -baseReach * Math.cos(splay);
-        const fzSide = baseReach * Math.sin(splay);
-        addMaoFrancesa(-baseReach, 0);      // do meio (para o vão)
-        addMaoFrancesa(fxSide, fzSide);     // lateral 1
-        addMaoFrancesa(fxSide, -fzSide);    // lateral 2
+        // Face interna/externa da mureta (modo platibanda). Coluna fica em x=0 (lado
+        // de dentro); a mureta fica no +x; a fachada/vão fica além dela.
+        const xMuroInner = ladoLuva / 2;
+        const xMuroOuter = ladoLuva / 2 + espMureta;
+        const yBoom = Math.max(alturaMF, alturaMureta) + 0.06;
+        const xDrop = xMuroOuter + 0.16;   // onde o cabo desce, do lado da fachada
 
-        // ============ PEÇA MÓVEL: MASTRO (cavalete) que passa pelo colar ============
-        // Mastro vertical: sobe (sobra = regulagem) e desce até ficar RENTE com a
-        // barra horizontal que engata por baixo da laje.
-        const descidaMast = espLaje + bitolaTorre;
+        if (ehLaje) {
+            const splay = 65 * Math.PI / 180;
+            const fxSide = -baseReach * Math.cos(splay);
+            const fzSide = baseReach * Math.sin(splay);
+            addMaoFrancesa(-baseReach, 0);      // do meio (para o vão)
+            addMaoFrancesa(fxSide, fzSide);     // lateral 1
+            addMaoFrancesa(fxSide, -fzSide);    // lateral 2
+        } else {
+            // ===== Modo PLATIBANDA: aperta a mureta como um sargento =====
+            const profMuro = 0.7;
+            // Telhado/laje da cobertura (lado de dentro)
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(xMuroOuter + 1.4, 0.15, profMuro + 0.2), materialConcreto);
+            roof.position.set(xMuroOuter - (xMuroOuter + 1.4) / 2, -0.075, 0);
+            grupo.add(roof);
+            // Mureta (platibanda)
+            const muro = new THREE.Mesh(new THREE.BoxGeometry(espMureta, alturaMureta, profMuro), materialConcreto);
+            muro.position.set(xMuroInner + espMureta / 2, alturaMureta / 2, 0);
+            grupo.add(muro);
+
+            // Boom: barra passando por cima da mureta, da coluna até a fachada
+            addBarra(xDrop, bitolaTorre, xDrop / 2, yBoom, 0, 'x');
+            // Mordente externo (na face da fachada) descendo do boom
+            addBarra(0.30, bitolaTorre, xMuroOuter + bitolaTorre / 2, yBoom - 0.15, 0, 'y');
+
+            // Barra roscada + borracha apertando a face externa da mureta (sargento)
+            const yScrew = alturaMureta - 0.12;
+            const borracha = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.11, 0.11), materialBorracha);
+            borracha.position.set(xMuroOuter + 0.015, yScrew, 0);
+            grupo.add(borracha);
+            addBarra(compRosca, bitolaTorre * 0.5, xMuroOuter + 0.03 + compRosca / 2, yScrew, 0, 'x', materialRosca);
+            const knob = new THREE.Mesh(new THREE.CylinderGeometry(bitolaTorre * 0.55, bitolaTorre * 0.55, bitolaTorre * 0.5, 12), materialFuro);
+            knob.rotation.z = Math.PI / 2;
+            knob.position.set(xMuroOuter + 0.03 + compRosca, yScrew, 0);
+            grupo.add(knob);
+        }
+
+        // ============ PEÇA MÓVEL: MASTRO (cavalete) que passa pela luva ============
+        // No modo laje desce até ficar rente à barra que engata sob a laje; no modo
+        // platibanda começa no nível do telhado (a mureta é apertada pelo sargento).
+        const descidaMast = ehLaje ? espLaje + bitolaTorre : 0;
         const alturaMastroTotal = alturaTorre + descidaMast;
         addBarra(alturaMastroTotal, bitolaTorre, 0, alturaTorre - alturaMastroTotal / 2, 0, 'y');
 
@@ -182,9 +228,11 @@
         pino.position.set(0, alturaMF * 0.55, 0);
         grupo.add(pino);
 
-        // Pé/gancho sob a laje (parte da peça do mastro, engata por baixo)
-        const compPe = Math.min(baseReach, 0.5) + 0.05;
-        addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
+        // Pé/gancho sob a laje (só no modo laje; parte da peça do mastro, engata por baixo)
+        const compPe = ehLaje ? Math.min(baseReach, 0.5) + 0.05 : 0;
+        if (ehLaje) {
+            addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
+        }
 
         // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar por uma chapa =====
         // Conjunto DEITADO ao longo de z (paralelo à borda da laje). O suporte de
@@ -192,9 +240,13 @@
         // aço sai pela FRENTE (lado do vão) e desce até o gancho.
         const yWinch = alturaMF;
         const zMotor = -0.07;  // chapa/motor jogados um pouco para a esquerda (fora do centro)
-        const xChapa = 0.04;   // chapa soldada na luva (atrás da saída do cabo)
-        const xWinch = 0.14;   // corpo do guincho, à frente da chapa
-        const xCabo = 0.21;    // saída do cabo de aço, sobre o vão
+        const motorSide = ehLaje ? 1 : -1;  // platibanda: motor voltado para o lado de dentro
+        const xChapa = 0.04 * motorSide;    // chapa soldada na luva
+        const xWinch = 0.14 * motorSide;    // corpo do guincho
+        // Onde o cabo desce: laje = sobre o vão; platibanda = na fachada (após a mureta)
+        const xCabo = ehLaje ? 0.21 : xDrop;
+        const zCabo = ehLaje ? zMotor + 0.065 : 0;
+        const yCaboTop = ehLaje ? yWinch : yBoom;
 
         // Chapa de ferro soldada na luva — suporte de fixação com 2 parafusos
         const geomChapa = new THREE.BoxGeometry(0.014, ladoLuva * 1.7, 0.24);
@@ -204,7 +256,7 @@
         for (const dz of [-0.08, 0.08]) {
             const parafuso = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 10), materialFuro);
             parafuso.rotation.z = Math.PI / 2;
-            parafuso.position.set(xChapa + 0.014, yWinch, zMotor + dz);
+            parafuso.position.set(xChapa + 0.014 * motorSide, yWinch, zMotor + dz);
             grupo.add(parafuso);
         }
 
@@ -214,7 +266,7 @@
         motor.position.set(xWinch, yWinch, zMotor - 0.09);
         grupo.add(motor);
 
-        // Tambor com cabo de aço (cilindro metálico, eixo em z), do lado do vão
+        // Tambor com cabo de aço (cilindro metálico, eixo em z)
         const tambor = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.13, 20), materialTambor);
         tambor.rotation.x = Math.PI / 2;
         tambor.position.set(xWinch, yWinch, zMotor + 0.065);
@@ -226,19 +278,27 @@
             grupo.add(flange);
         }
 
-        // Cabo de aço sai pela frente do tambor (lado do vão) e desce até o gancho
-        const alturaGancho = Math.min(alturaMF + espLaje + 0.35, 1.0);
+        // No modo platibanda, uma roldana no boom leva o cabo até a fachada
+        if (!ehLaje) {
+            const roldana = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 16), materialTambor);
+            roldana.rotation.x = Math.PI / 2;
+            roldana.position.set(xCabo, yBoom, 0);
+            grupo.add(roldana);
+        }
+
+        // Cabo de aço desce até o gancho
+        const alturaGancho = ehLaje ? Math.min(alturaMF + espLaje + 0.35, 1.0) : yBoom + 0.5;
         const cabo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, alturaGancho, 8), materialTambor);
-        cabo.position.set(xCabo, yWinch - 0.05 - alturaGancho / 2, zMotor + 0.065);
+        cabo.position.set(xCabo, yCaboTop - 0.05 - alturaGancho / 2, zCabo);
         grupo.add(cabo);
 
         const gancho = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.012, 8, 16, Math.PI * 1.5), materialAco);
-        gancho.position.set(xCabo, yWinch - 0.05 - alturaGancho - 0.03, zMotor + 0.065);
+        gancho.position.set(xCabo, yCaboTop - 0.05 - alturaGancho - 0.03, zCabo);
         grupo.add(gancho);
 
         // ============ CAIXA (fonte + bateria, tipo USINA BOB) sobre a laje ============
         if (larguraCaixa > 0 && alturaCaixa > 0 && profCaixa > 0) {
-            const xCaixa = -baseReach - 0.18 - larguraCaixa / 2;
+            const xCaixa = ehLaje ? (-baseReach - 0.18 - larguraCaixa / 2) : (-0.30 - larguraCaixa / 2);
             const zFrente = profCaixa / 2 + 0.004;
             const geomCaixa = new THREE.BoxGeometry(larguraCaixa, alturaCaixa, profCaixa);
             const caixa = new THREE.Mesh(geomCaixa, materialCaixa);
@@ -267,10 +327,18 @@
         }
 
         // ---- Cálculo de material ----
-        // 3 mãos francesas: 3 diagonais + 3 bases na laje + 3 barras roscadas
-        const metrosTubos = alturaMastroTotal + compPe + 3 * baseReach;
-        const metrosDiag = 3 * compDiagG;
-        const metrosRosca = 3 * compRosca;
+        let metrosTubos, metrosDiag, metrosRosca;
+        if (ehLaje) {
+            // 3 mãos francesas: 3 diagonais + 3 bases na laje + 3 barras roscadas
+            metrosTubos = alturaMastroTotal + compPe + 3 * baseReach;
+            metrosDiag = 3 * compDiagG;
+            metrosRosca = 3 * compRosca;
+        } else {
+            // Platibanda: mastro + boom por cima da mureta + mordente externo
+            metrosTubos = alturaMastroTotal + xDrop + 0.30;
+            metrosDiag = 0;
+            metrosRosca = compRosca;
+        }
         const metrosPorGuincho = metrosTubos + metrosDiag + metrosRosca;
 
         const totalTubos = metrosTubos * qtdGuinchos;
@@ -288,8 +356,8 @@
         document.getElementById('gTotalCusto').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['alturaTorre', 'alturaMF', 'compDiagG', 'compRosca', 'espLaje',
-        'larguraCaixa', 'alturaCaixa', 'profCaixa',
+    const listaInputs = ['modoFixacao', 'alturaTorre', 'alturaMF', 'compDiagG', 'compRosca', 'espLaje',
+        'alturaMureta', 'espMureta', 'larguraCaixa', 'alturaCaixa', 'profCaixa',
         'bitolaTorre', 'bitolaDiagG', 'qtdGuinchos'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
