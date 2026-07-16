@@ -108,13 +108,26 @@
         colar.position.set(0, alturaMF, 0);
         grupo.add(colar);
 
+        // Ângulo da diagonal no plano vertical (igual para as três mãos francesas)
+        const anguloDiag = Math.atan2(alturaMF, baseReach);
+
         // Uma mão francesa = base na laje + diagonal (colar→pé) + barra roscada c/ borracha.
         // Três iguais: a do meio (para o vão) e duas laterais, travando o tombamento p/ os lados.
         function addMaoFrancesa(fx, fz) {
             // Base sobre a laje: do pé do mastro até o pé da mão francesa
             addBarraEntrePontos(0, bitolaTorre / 2, 0, fx, bitolaTorre / 2, fz, bitolaTorre, materialAco);
-            // Diagonal: do colar até o pé (mesmo comprimento nas três)
-            addBarraEntrePontos(0, alturaMF, 0, fx, 0, fz, bitolaDiagG, materialAco);
+
+            // Diagonal RETA como a central: mesma inclinação no plano vertical, apenas
+            // girada em torno do eixo do mastro (sem torcer a seção da barra). O corte
+            // das pontas fica em ângulo para encaixar no colar e no pé.
+            const phi = Math.atan2(fz, -fx);
+            const diag = new THREE.Mesh(new THREE.BoxGeometry(compDiagG, bitolaDiagG, bitolaDiagG), materialAco);
+            const qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), anguloDiag);
+            const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), phi);
+            diag.quaternion.copy(qy).multiply(qz);
+            const mx = -baseReach / 2;
+            diag.position.set(mx * Math.cos(phi), alturaMF / 2, -mx * Math.sin(phi));
+            grupo.add(diag);
 
             const borracha = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.03, 0.11), materialBorracha);
             borracha.position.set(fx, 0.015, fz);
@@ -166,60 +179,53 @@
         const compPe = Math.min(baseReach, 0.5) + 0.05;
         addBarra(compPe, bitolaTorre, -compPe / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
 
-        // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar da mão francesa =====
-        // Fica na altura do colar (luva), virado com o tambor/gancho para fora
-        // (lado do vão), afastado do suporte. Eixo do conjunto ao longo de x.
+        // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar por uma chapa =====
+        // Conjunto DEITADO ao longo de z (paralelo à borda da laje). O suporte de
+        // fixação (chapa + 2 parafusos) fica ATRÁS, do lado do mastro; o cabo de
+        // aço sai pela FRENTE (lado do vão) e desce até o gancho.
         const yWinch = alturaMF;
-        const xMotor = 0.16;   // corpo do motor (perto do colar)
-        const xTambor = 0.30;  // tambor + cabo (mais afastado do suporte)
+        const xChapa = 0.04;   // chapa soldada no colar (atrás da saída do cabo)
+        const xWinch = 0.14;   // corpo do guincho, à frente da chapa
+        const xCabo = 0.21;    // saída do cabo de aço, sobre o vão
 
-        // Braço de fixação do colar até o motor
-        addBarra(xMotor, bitolaTorre * 0.7, xMotor / 2, yWinch, 0, 'x', materialFuro);
-
-        // Chapa de ferro soldada na luva (colar) para fixar o motor — 2 parafusos
-        const geomChapa = new THREE.BoxGeometry(0.012, ladoColar * 1.8, ladoColar * 1.6);
+        // Chapa de ferro soldada na luva (colar) — suporte de fixação com 2 parafusos
+        const geomChapa = new THREE.BoxGeometry(0.014, ladoColar * 1.9, 0.24);
         const chapa = new THREE.Mesh(geomChapa, materialAco);
-        chapa.position.set(0.05, yWinch, 0);
+        chapa.position.set(xChapa, yWinch, 0);
         grupo.add(chapa);
-        for (const dz of [-1, 1]) {
+        for (const dz of [-0.08, 0.08]) {
             const parafuso = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 10), materialFuro);
             parafuso.rotation.z = Math.PI / 2;
-            parafuso.position.set(0.062, yWinch, dz * ladoColar * 0.5);
+            parafuso.position.set(xChapa + 0.014, yWinch, dz);
             grupo.add(parafuso);
         }
 
-        // Corpo do motor (cilindro escuro, eixo em x)
-        const geomMotor = new THREE.CylinderGeometry(0.05, 0.05, 0.13, 20);
-        const motor = new THREE.Mesh(geomMotor, materialMotorBody);
-        motor.rotation.z = Math.PI / 2;
-        motor.position.set(xMotor, yWinch, 0);
+        // Corpo do motor (cilindro escuro, eixo em z)
+        const motor = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.14, 20), materialMotorBody);
+        motor.rotation.x = Math.PI / 2;
+        motor.position.set(xWinch, yWinch, -0.09);
         grupo.add(motor);
 
-        // Tambor com cabo de aço (cilindro metálico, eixo em x)
-        const geomTambor = new THREE.CylinderGeometry(0.048, 0.048, 0.14, 20);
-        const tambor = new THREE.Mesh(geomTambor, materialTambor);
-        tambor.rotation.z = Math.PI / 2;
-        tambor.position.set(xTambor, yWinch, 0);
+        // Tambor com cabo de aço (cilindro metálico, eixo em z), do lado do vão
+        const tambor = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.13, 20), materialTambor);
+        tambor.rotation.x = Math.PI / 2;
+        tambor.position.set(xWinch, yWinch, 0.065);
         grupo.add(tambor);
-
-        for (const xf of [xTambor - 0.07, xTambor + 0.07]) {
-            const geomFlange = new THREE.CylinderGeometry(0.058, 0.058, 0.012, 20);
-            const flange = new THREE.Mesh(geomFlange, materialFuro);
-            flange.rotation.z = Math.PI / 2;
-            flange.position.set(xf, yWinch, 0);
+        for (const zf of [0.005, 0.125]) {
+            const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.012, 20), materialFuro);
+            flange.rotation.x = Math.PI / 2;
+            flange.position.set(xWinch, yWinch, zf);
             grupo.add(flange);
         }
 
-        // Cabo desce do tambor até o gancho, do lado do vão (afastado do suporte)
+        // Cabo de aço sai pela frente do tambor (lado do vão) e desce até o gancho
         const alturaGancho = Math.min(alturaMF + espLaje + 0.35, 1.0);
-        const geomCabo = new THREE.CylinderGeometry(0.006, 0.006, alturaGancho, 8);
-        const cabo = new THREE.Mesh(geomCabo, materialTambor);
-        cabo.position.set(xTambor, yWinch - 0.05 - alturaGancho / 2, 0);
+        const cabo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, alturaGancho, 8), materialTambor);
+        cabo.position.set(xCabo, yWinch - 0.05 - alturaGancho / 2, 0.065);
         grupo.add(cabo);
 
-        const geomGancho = new THREE.TorusGeometry(0.04, 0.012, 8, 16, Math.PI * 1.5);
-        const gancho = new THREE.Mesh(geomGancho, materialAco);
-        gancho.position.set(xTambor, yWinch - 0.05 - alturaGancho - 0.03, 0);
+        const gancho = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.012, 8, 16, Math.PI * 1.5), materialAco);
+        gancho.position.set(xCabo, yWinch - 0.05 - alturaGancho - 0.03, 0.065);
         grupo.add(gancho);
 
         // ============ CAIXA (fonte + bateria, tipo USINA BOB) sobre a laje ============
