@@ -60,20 +60,20 @@
     function atualizarModelo() {
         limpar();
 
-        const alturaTorre = parseFloat(document.getElementById('alturaTorre').value) || 0;
-        const alturaMF = parseFloat(document.getElementById('alturaMF').value) || 0;
-        const compDiagG = parseFloat(document.getElementById('compDiagG').value) || 0;
-        const compRosca = parseFloat(document.getElementById('compRosca').value) || 0;
-        const espLaje = parseFloat(document.getElementById('espLaje').value) || 0;
+        const alturaTorre = lerNumInput('alturaTorre');
+        const alturaMF = lerNumInput('alturaMF');
+        const compDiagG = lerNumInput('compDiagG');
+        const compRosca = lerNumInput('compRosca');
+        const espLaje = lerNumInput('espLaje');
 
-        const larguraCaixa = parseFloat(document.getElementById('larguraCaixa').value) || 0;
-        const alturaCaixa = parseFloat(document.getElementById('alturaCaixa').value) || 0;
-        const profCaixa = parseFloat(document.getElementById('profCaixa').value) || 0;
+        const larguraCaixa = lerNumInput('larguraCaixa');
+        const alturaCaixa = lerNumInput('alturaCaixa');
+        const profCaixa = lerNumInput('profCaixa');
 
-        const bitolaTorre = (parseFloat(document.getElementById('bitolaTorre').value) || 0) / 1000;
-        const bitolaDiagG = (parseFloat(document.getElementById('bitolaDiagG').value) || 0) / 1000;
+        const bitolaTorre = lerNumInput('bitolaTorre') / 1000;
+        const bitolaDiagG = lerNumInput('bitolaDiagG') / 1000;
 
-        const qtdGuinchos = parseInt(document.getElementById('qtdGuinchos').value) || 1;
+        const qtdGuinchos = lerIntInput('qtdGuinchos');
 
         // Mão francesa: colar em (0, alturaMF); base vai até (-baseReach, 0) sobre a laje
         const baseReach = Math.sqrt(Math.max(compDiagG * compDiagG - alturaMF * alturaMF, 0.0001));

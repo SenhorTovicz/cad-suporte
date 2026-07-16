@@ -45,13 +45,15 @@
     function atualizarModelo() {
         limparGrupo();
 
-        const largura = parseFloat(document.getElementById('larguraVao').value) || 0;
-        const altura = parseFloat(document.getElementById('alturaVao').value) || 0;
-        const bitolaMoldura = (parseFloat(document.getElementById('bitolaMoldura').value) || 0) / 1000;
-        const bitolaBarras = (parseFloat(document.getElementById('bitolaBarras').value) || 0) / 1000;
-        const espacamento = (parseFloat(document.getElementById('espacamentoBarras').value) || 10) / 100;
-        const qtdTravessas = parseInt(document.getElementById('qtdTravessas').value) || 0;
-        const qtdVaos = parseInt(document.getElementById('qtdVaos').value) || 1;
+        const largura = lerNumInput('larguraVao');
+        const altura = lerNumInput('alturaVao');
+        const bitolaMoldura = lerNumInput('bitolaMoldura') / 1000;
+        const bitolaBarras = lerNumInput('bitolaBarras') / 1000;
+        const espVal = lerNumInput('espacamentoBarras');
+        // mínimo de 3 cm evita divisão por zero / laço enorme
+        const espacamento = Math.max(0.03, (espVal > 0 ? espVal : 10) / 100);
+        const qtdTravessas = lerIntInput('qtdTravessas', 0);
+        const qtdVaos = lerIntInput('qtdVaos');
 
         if (largura <= 0 || altura <= 0) return;
 
