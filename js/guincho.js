@@ -225,9 +225,10 @@
             furoDisco(alturaMF + 0.06 + i * (Math.max(alturaTorre - alturaMF - 0.12, 0.01) / Math.max(nFuroMast - 1, 1)), bitolaTorre / 2);
         }
 
-        // Pino de fixação atravessando a luva (trava a altura do mastro)
+        // Pino de fixação atravessando a luva (trava a altura do mastro).
+        // Fica na MESMA direção do motor (eixo z, ao longo da borda).
         const pino = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, ladoLuva + 0.12, 12), materialRosca);
-        pino.rotation.z = Math.PI / 2;
+        pino.rotation.x = Math.PI / 2;
         pino.position.set(0, alturaMF * 0.55, 0);
         grupo.add(pino);
 
