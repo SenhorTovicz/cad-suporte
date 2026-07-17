@@ -143,8 +143,8 @@
         const chapaBaixo = topY - altExt + recuoChapa;
         addChapaFuros(bitolaExt / 2 + 0.003, chapaTopo, 0, true);
         if (chapaTopo - chapaBaixo >= 0.07) addChapaFuros(bitolaExt / 2 + 0.003, chapaBaixo, 0, true);
-        // 1 chapa sobre a platibanda, a 10 cm da solda do mastro com a coluna
-        addChapaFuros(0.10 + 0.075, topY - bitolaMastro / 2 - 0.003, 0, false);
+        // 1 chapa sobre a platibanda, a 7 cm da coluna (solda do mastro)
+        addChapaFuros(0.07 + 0.03, topY - bitolaMastro / 2 - 0.003, 0, false);
 
         // ---- Platibanda (mureta), afastada 3 cm do suporte (lados, frente e topo) ----
         const altPlat = Math.max(altExt - bitolaMastro / 2 - folga, 0.1);
