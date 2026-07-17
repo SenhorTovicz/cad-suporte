@@ -27,7 +27,7 @@
     const materialAco = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.8 });
     const materialConcreto = new THREE.MeshLambertMaterial({ color: 0x95a5a6 });
     const materialLuva = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.5, metalness: 0.7 });
-    const materialFuro = new THREE.MeshStandardMaterial({ color: 0x1c2833, roughness: 0.6, metalness: 0.3 });
+    const materialFuro = new THREE.MeshStandardMaterial({ color: 0xa8b0b6, roughness: 0.55, metalness: 0.4 });
 
     const grupoMastroHorizontal = new THREE.Group();
     scene.add(grupoMastroHorizontal);
@@ -69,14 +69,16 @@
 
         const topY = Math.max(altExt, altInt);
         const folga = 0.03;                       // afastamento do suporte p/ platibanda
-        const raioPonta = bitolaMastro / 2;       // arredondamento da ponta (sem canto vivo)
+        const raioPonta = 0.02;                   // arredondamento SÓ no topo da ponta (R20)
 
-        // ---- PEÇA 2 (posições): a coluna fica na face interna da platibanda; a
-        // diagonal desliza sozinha: a 2ª luva anda conforme SÓ o tamanho dela muda.
+        // ---- PEÇA 2 (posições): a coluna fica na face interna da platibanda. A
+        // diagonal tem ângulo FIXO de 27° (como construída): mudar a coluna NÃO
+        // mexe na diagonal e mudar a diagonal NÃO mexe na coluna.
         const xLuvaA = bitolaExt / 2 + folga + largPlatibanda + bitolaInt / 2;
-        const alcanceDiag = Math.sqrt(Math.max(compDiag * compDiag - altInt * altInt, 0.0001));
+        const anguloDiag = 27 * Math.PI / 180;
+        const alcanceDiag = compDiag * Math.cos(anguloDiag);
+        const quedaDiag = compDiag * Math.sin(anguloDiag);
         const xLuvaB = xLuvaA + alcanceDiag;
-        const anguloDiag = Math.atan2(altInt, alcanceDiag);
         const ladoLuva = bitolaMastro + 0.01;     // luva 60 mm p/ tubo de 50 mm
 
         // ---- PEÇA 1: L (mastro horizontal + coluna vertical soldada) ----
@@ -85,24 +87,30 @@
         // = meia luva 0,05 + folga p/ furo e arredondamento).
         const compMastroEfetivo = Math.max(compMastro, xLuvaB + 0.15);
 
-        // Mastro horizontal, encurtado na ponta para receber o arredondamento
+        // Mastro horizontal, encurtado no topo da ponta p/ receber o arredondamento
         const geomMastro = new THREE.BoxGeometry(compMastroEfetivo - raioPonta, bitolaMastro, bitolaMastro);
         const meshMastro = new THREE.Mesh(geomMastro, materialAco);
         meshMastro.position.set((compMastroEfetivo - raioPonta) / 2, topY, 0);
         grupoMastroHorizontal.add(meshMastro);
 
-        // Ponta arredondada (meia-cana) — protege a tela, sem canto vivo
+        // Faixa de baixo da ponta: canto INFERIOR reto (90°)
+        const geomPontaBaixo = new THREE.BoxGeometry(raioPonta, bitolaMastro - raioPonta, bitolaMastro);
+        const meshPontaBaixo = new THREE.Mesh(geomPontaBaixo, materialAco);
+        meshPontaBaixo.position.set(compMastroEfetivo - raioPonta / 2, topY - raioPonta / 2, 0);
+        grupoMastroHorizontal.add(meshPontaBaixo);
+
+        // Arredondamento SÓ no canto de cima (R20) — protege a tela, sem canto vivo
         const geomPonta = new THREE.CylinderGeometry(raioPonta, raioPonta, bitolaMastro, 20);
         const meshPonta = new THREE.Mesh(geomPonta, materialAco);
         meshPonta.rotation.x = Math.PI / 2;
-        meshPonta.position.set(compMastroEfetivo - raioPonta, topY, 0);
+        meshPonta.position.set(compMastroEfetivo - raioPonta, topY + bitolaMastro / 2 - raioPonta, 0);
         grupoMastroHorizontal.add(meshPonta);
 
-        // Furo p/ passar o cabo de aço de um suporte ao outro (o mais alto possível)
+        // Furo p/ o cabo de aço, o mais próximo possível da ponta (logo atrás do R20)
         const geomFuroCabo = new THREE.CylinderGeometry(0.007, 0.007, bitolaMastro + 0.006, 12);
         const furoCabo = new THREE.Mesh(geomFuroCabo, materialFuro);
         furoCabo.rotation.x = Math.PI / 2;
-        furoCabo.position.set(compMastroEfetivo - raioPonta - 0.035, topY + bitolaMastro / 2 - 0.015, 0);
+        furoCabo.position.set(compMastroEfetivo - 0.025, topY + bitolaMastro / 2 - 0.014, 0);
         grupoMastroHorizontal.add(furoCabo);
 
         // Coluna do L (barra vertical soldada na ponta do mastro), face externa
@@ -112,21 +120,19 @@
         grupoMastroHorizontal.add(meshColL);
 
         // ---- Chapas de fixação 150×60×6 c/ furos Ø12 ----
+        // O lado de 150 fica ATRAVESSADO na barra: os furos sobram dos dois lados
+        // da barra, livres para receber os parafusos/chumbadores na platibanda.
         function addChapaFuros(cx, cy, cz, vertical) {
             const geomCh = vertical
-                ? new THREE.BoxGeometry(0.006, 0.15, 0.06)
-                : new THREE.BoxGeometry(0.15, 0.006, 0.06);
+                ? new THREE.BoxGeometry(0.006, 0.06, 0.15)
+                : new THREE.BoxGeometry(0.06, 0.006, 0.15);
             const ch = new THREE.Mesh(geomCh, materialAco);
             ch.position.set(cx, cy, cz);
             grupoMastroHorizontal.add(ch);
             for (const d of [-0.045, 0.045]) {
                 const furo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.016, 12), materialFuro);
-                if (vertical) {
-                    furo.rotation.z = Math.PI / 2;
-                    furo.position.set(cx, cy + d, cz);
-                } else {
-                    furo.position.set(cx + d, cy, cz);
-                }
+                if (vertical) furo.rotation.z = Math.PI / 2;
+                furo.position.set(cx, cy, cz + d);
                 grupoMastroHorizontal.add(furo);
             }
         }
@@ -136,7 +142,7 @@
         const chapaTopo = topY - recuoChapa;
         const chapaBaixo = topY - altExt + recuoChapa;
         addChapaFuros(bitolaExt / 2 + 0.003, chapaTopo, 0, true);
-        if (chapaTopo - chapaBaixo >= 0.16) addChapaFuros(bitolaExt / 2 + 0.003, chapaBaixo, 0, true);
+        if (chapaTopo - chapaBaixo >= 0.07) addChapaFuros(bitolaExt / 2 + 0.003, chapaBaixo, 0, true);
         // 1 chapa sobre a platibanda, a 10 cm da solda do mastro com a coluna
         addChapaFuros(0.10 + 0.075, topY - bitolaMastro / 2 - 0.003, 0, false);
 
@@ -154,11 +160,12 @@
         meshColMF.position.set(xLuvaA, topY - altInt / 2, 0);
         grupoMastroHorizontal.add(meshColMF);
 
-        // Diagonal: da base da coluna da mão francesa até a 2ª luva no mastro
+        // Diagonal: pendurada na 2ª luva com ângulo fixo de 27°, descendo até a
+        // linha da coluna — independente do tamanho da coluna
         const geomDiag = new THREE.BoxGeometry(compDiag, bitolaDiag, bitolaDiag);
         const meshDiag = new THREE.Mesh(geomDiag, materialAco);
         meshDiag.rotation.z = anguloDiag;
-        meshDiag.position.set((xLuvaA + xLuvaB) / 2, topY - altInt / 2, 0);
+        meshDiag.position.set((xLuvaA + xLuvaB) / 2, topY - quedaDiag / 2, 0);
         grupoMastroHorizontal.add(meshDiag);
 
         // Duas luvas nas pontas da mão francesa, correndo pela barra do mastro
