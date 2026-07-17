@@ -201,10 +201,10 @@
         }
 
         // ============ PEÇA MÓVEL: MASTRO em L (cavalete) que passa pela luva ============
-        // Parte vertical (maior, com furos) sobe pela luva; parte de baixo (pé) é
-        // horizontal e vai para trás, apoiando sobre a laje. O canto do L fica em y=0.
-        const descidaMast = 0;
-        const alturaMastroTotal = alturaTorre;
+        // Parte vertical (maior, com furos) sobe pela luva e desce até abaixo da laje;
+        // parte de baixo (pé) é horizontal e engata POR BAIXO da laje (grampeia a borda).
+        const descidaMast = ehLaje ? espLaje + bitolaTorre : 0;
+        const alturaMastroTotal = alturaTorre + descidaMast;
         addBarra(alturaMastroTotal, bitolaTorre, 0, alturaTorre - alturaMastroTotal / 2, 0, 'y');
 
         // Furos: na LUVA (é onde entra o pino de fixação) e no trecho do mastro que
@@ -231,11 +231,11 @@
         pino.position.set(0, alturaMF * 0.55, 0);
         grupo.add(pino);
 
-        // Pé horizontal do L (só no modo laje): vai do canto do mastro para trás,
-        // apoiado no topo da laje (forma o L junto com a parte vertical).
+        // Pé horizontal do L (só no modo laje): engata POR BAIXO da laje, pegando a
+        // parte de baixo da borda (forma o L junto com a parte vertical).
         const compPe = ehLaje ? compPeL : 0;
         if (ehLaje) {
-            addBarra(compPeL, bitolaTorre, -compPeL / 2 + bitolaTorre / 2, bitolaTorre / 2, 0, 'x');
+            addBarra(compPeL, bitolaTorre, -compPeL / 2 + bitolaTorre / 2, -espLaje - bitolaTorre / 2, 0, 'x');
         }
 
         // ===== Motor guincho (tipo Winch 3000lb) FIXADO no colar por uma chapa =====
