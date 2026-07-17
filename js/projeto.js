@@ -21,7 +21,7 @@ function exportarProjetoGuincho() {
     const m60 = hLuva / 1000;
     const p50 = m50 * kgm(bit);
     const p60 = m60 * kgm(ladoLuva);
-    const ptot = p50 + p60 + 1.2; // + chapa 250x100x6
+    const ptot = p50 + p60 + 1.4; // + chapa 250x120x6
 
     const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const r1 = (v) => Math.round(v * 100) / 100;
@@ -122,12 +122,14 @@ function exportarProjetoGuincho() {
     tx(118 + base * s / 2, 89, `Tubo ${bit}×${bit}×3 mm`, 2.5);
 
     // ================= PEÇA 5 — CHAPA DO MOTOR =================
-    rc(118, 94, 25, 10);
-    ci(125.5, 99, 0.5); ci(135.5, 99, 0.5);
-    dimH(125.5, 135.5, 91, 100, 99);
-    dimH(118, 143, 110, 250, 104);
-    tx(130.5, 116, 'PEÇA 5 — CHAPA MOTOR (1x)', 2.8, 'middle', true);
-    tx(130.5, 119.5, '250×100×6 mm • 2 furos Ø10', 2.5);
+    rc(118, 94, 25, 12);
+    ci(123, 96, 0.5); ci(123, 104, 0.5);            // furos na VERTICAL
+    dimH(118, 123, 91, 50, 96);                      // 50 do canto esquerdo
+    dimV(96, 104, 113.5, 80, 123);                   // 80 entre furos
+    dimV(94, 106, 147.5, 120, 143);                  // altura 120
+    dimH(118, 143, 111.5, 250, 106);                 // comprimento 250
+    tx(130.5, 118, 'PEÇA 5 — CHAPA MOTOR (1x)', 2.8, 'middle', true);
+    tx(130.5, 121.5, '250×120×6 mm • 2 furos Ø10', 2.5);
 
     // ================= PEÇA 6 — BARRA ROSCADA =================
     ci(180, 95.5, 1.4, 0.35);
@@ -175,7 +177,7 @@ function exportarProjetoGuincho() {
     rc(xR - 0.7, Y(30) - rosca * s, 1.4, rosca * s, 0.3);
     ci(xR, Y(30) - rosca * s - 1.2, 1.3, 0.35);
     // chapa + motor (visto de topo do eixo: círculo) + cabo + gancho
-    rc(xM + 3.5, Y(hLuva) - 5, 1.4, 10);
+    rc(xM + 3.5, Y(hLuva) - 6, 1.4, 12);
     ci(xM + 14, Y(hLuva), 5, 0.4);
     ln(xM + 14, Y(hLuva) + 5, xM + 14, 124, 0.3);
     svg.push(`<path d="M${r1(xM + 12)},126 A2,2 0 1 0 ${r1(xM + 16)},126" fill="none" stroke="#000" stroke-width="0.4"/>`);
@@ -213,7 +215,7 @@ function exportarProjetoGuincho() {
     edit(99.5, 168, 65.5, 34,
         `Tubo ${bit}×${bit}×3 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
         `Tubo ${ladoLuva}×${ladoLuva}×3 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
-        'Chapa aço 250×100×6 mm — 1 pç<br/>' +
+        'Chapa aço 250×120×6 mm — 1 pç<br/>' +
         'Barra roscada c/ borracha — 3 pç<br/>' +
         'Pino Ø12 — 1 pç • Parafusos M10 — 2 pç<br/>' +
         'Motor guincho + fonte/bateria — 1 cj<br/>' +

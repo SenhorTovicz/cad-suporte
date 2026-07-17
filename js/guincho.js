@@ -253,15 +253,18 @@
         const zCabo = ehLaje ? zMotor + 0.065 : 0;
         const yCaboTop = ehLaje ? yWinch : yBoom;
 
-        // Chapa de ferro soldada na luva (25 cm), fora do centro, com 2 parafusos a 10 cm
-        const geomChapa = new THREE.BoxGeometry(0.014, ladoLuva * 1.7, 0.25);
+        // Chapa de ferro soldada na luva (250×120 mm), fora do centro. Os 2 parafusos
+        // que fixam o motor ficam na VERTICAL, a 80 mm um do outro e a 50 mm do
+        // canto esquerdo da chapa (lado do corpo do motor).
+        const geomChapa = new THREE.BoxGeometry(0.014, 0.12, 0.25);
         const chapa = new THREE.Mesh(geomChapa, materialAco);
         chapa.position.set(xChapa, yWinch, zMotor);
         grupo.add(chapa);
-        for (const dz of [-0.05, 0.05]) {
+        const zFuros = zMotor - 0.125 + 0.05;
+        for (const dy of [-0.04, 0.04]) {
             const parafuso = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 10), materialFuro);
             parafuso.rotation.z = Math.PI / 2;
-            parafuso.position.set(xChapa + 0.014 * motorSide, yWinch, zMotor + dz);
+            parafuso.position.set(xChapa + 0.014 * motorSide, yWinch + dy, zFuros);
             grupo.add(parafuso);
         }
 
