@@ -1,5 +1,7 @@
 const PRECO_KEY = 'cadSuporte.precoBarra6m';
-const PRECO_PADRAO = 381.45;
+const PRECO_PADRAO = 175.27;
+const GALV_KEY = 'cadSuporte.precoGalvKg';
+const GALV_PADRAO = 2.50;
 
 function formatBRL(valor) {
     return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -29,6 +31,22 @@ function initPrecoBarra(onChange) {
     input.value = salvo ? salvo : PRECO_PADRAO;
     input.addEventListener('input', () => {
         localStorage.setItem(PRECO_KEY, input.value);
+        onChange();
+    });
+}
+
+function getPrecoGalv() {
+    const input = document.getElementById('precoGalv');
+    const valor = parseFloat(input.value);
+    return isNaN(valor) ? 0 : Math.max(0, valor);
+}
+
+function initPrecoGalv(onChange) {
+    const input = document.getElementById('precoGalv');
+    const salvo = localStorage.getItem(GALV_KEY);
+    input.value = salvo ? salvo : GALV_PADRAO;
+    input.addEventListener('input', () => {
+        localStorage.setItem(GALV_KEY, input.value);
         onChange();
     });
 }

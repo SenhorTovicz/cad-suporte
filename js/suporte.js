@@ -27,6 +27,7 @@
     const materialAco = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.8 });
     const materialConcreto = new THREE.MeshLambertMaterial({ color: 0x95a5a6 });
     const materialLuva = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.5, metalness: 0.7 });
+    const materialFuro = new THREE.MeshStandardMaterial({ color: 0x1c2833, roughness: 0.6, metalness: 0.3 });
 
     const grupoMastroHorizontal = new THREE.Group();
     scene.add(grupoMastroHorizontal);
@@ -52,34 +53,48 @@
         const qtdSuportes = lerIntInput('qtdSuportes');
 
         // O suporte tem DUAS peças:
-        //  PEÇA 1 - "L": barra horizontal (mastro 1,75) soldada numa coluna
-        //           vertical (0,50). Encaixa na face externa da platibanda.
-        //  PEÇA 2 - "Mão francesa": uma coluna vertical (0,50) + uma diagonal,
-        //           formando o triângulo de sustentação. Nas suas duas pontas
-        //           há duas LUVAS que correm pela barra de 1,75 do L, para
-        //           regular o aperto conforme a espessura da platibanda.
+        //  PEÇA 1 - "L": barra horizontal (mastro 2,00) soldada numa coluna
+        //           vertical (0,50), com ponta arredondada + furo p/ cabo de aço,
+        //           2 chapas de fixação na coluna e 1 chapa sobre a platibanda.
+        //  PEÇA 2 - "Mão francesa": coluna vertical (0,50) e diagonal (1,10) —
+        //           cada uma com a sua LUVA correndo pelo mastro, movendo-se
+        //           de forma independente quando o tamanho muda.
 
         const topY = Math.max(altExt, altInt);
+        const folga = 0.03;                       // afastamento do suporte p/ platibanda
+        const raioPonta = bitolaMastro / 2;       // arredondamento da ponta (sem canto vivo)
 
-        // ---- PEÇA 2 (posições): Mão francesa (coluna vertical + diagonal + luvas) ----
-        // 1ª luva encosta a coluna da mão francesa na face interna da platibanda
-        const xLuvaA = bitolaExt / 2 + largPlatibanda + bitolaInt / 2;
-        // 2ª luva: onde a diagonal encontra o mastro (mão francesa mais aberta = mais longe)
+        // ---- PEÇA 2 (posições): a coluna fica na face interna da platibanda; a
+        // diagonal desliza sozinha: a 2ª luva anda conforme SÓ o tamanho dela muda.
+        const xLuvaA = bitolaExt / 2 + folga + largPlatibanda + bitolaInt / 2;
         const alcanceDiag = Math.sqrt(Math.max(compDiag * compDiag - altInt * altInt, 0.0001));
         const xLuvaB = xLuvaA + alcanceDiag;
         const anguloDiag = Math.atan2(altInt, alcanceDiag);
-        const ladoLuva = bitolaMastro + 0.02;
+        const ladoLuva = bitolaMastro + 0.01;     // luva 60 mm p/ tubo de 50 mm
 
         // ---- PEÇA 1: L (mastro horizontal + coluna vertical soldada) ----
         // Segurança: o mastro nunca fica curto a ponto de a 2ª luva sair da barra.
-        // Em uso normal o comprimento é exatamente o digitado; só estende no extremo.
         const compMastroEfetivo = Math.max(compMastro, xLuvaB + ladoLuva / 2 + 0.04);
 
-        // Mastro horizontal (barra de 1,75), da coluna do L para fora
-        const geomMastro = new THREE.BoxGeometry(compMastroEfetivo, bitolaMastro, bitolaMastro);
+        // Mastro horizontal, encurtado na ponta para receber o arredondamento
+        const geomMastro = new THREE.BoxGeometry(compMastroEfetivo - raioPonta, bitolaMastro, bitolaMastro);
         const meshMastro = new THREE.Mesh(geomMastro, materialAco);
-        meshMastro.position.set(compMastroEfetivo / 2, topY, 0);
+        meshMastro.position.set((compMastroEfetivo - raioPonta) / 2, topY, 0);
         grupoMastroHorizontal.add(meshMastro);
+
+        // Ponta arredondada (meia-cana) — protege a tela, sem canto vivo
+        const geomPonta = new THREE.CylinderGeometry(raioPonta, raioPonta, bitolaMastro, 20);
+        const meshPonta = new THREE.Mesh(geomPonta, materialAco);
+        meshPonta.rotation.x = Math.PI / 2;
+        meshPonta.position.set(compMastroEfetivo - raioPonta, topY, 0);
+        grupoMastroHorizontal.add(meshPonta);
+
+        // Furo p/ passar o cabo de aço de um suporte ao outro (o mais alto possível)
+        const geomFuroCabo = new THREE.CylinderGeometry(0.007, 0.007, bitolaMastro + 0.006, 12);
+        const furoCabo = new THREE.Mesh(geomFuroCabo, materialFuro);
+        furoCabo.rotation.x = Math.PI / 2;
+        furoCabo.position.set(compMastroEfetivo - raioPonta - 0.035, topY + bitolaMastro / 2 - 0.015, 0);
+        grupoMastroHorizontal.add(furoCabo);
 
         // Coluna do L (barra vertical soldada na ponta do mastro), face externa
         const geomColL = new THREE.BoxGeometry(bitolaExt, altExt, bitolaExt);
@@ -87,10 +102,37 @@
         meshColL.position.set(0, topY - altExt / 2, 0);
         grupoMastroHorizontal.add(meshColL);
 
-        // ---- Platibanda (mureta), apertada entre as duas colunas ----
-        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altExt, 0.22);
+        // ---- Chapas de fixação 150×60×6 c/ furos Ø12 ----
+        function addChapaFuros(cx, cy, cz, vertical) {
+            const geomCh = vertical
+                ? new THREE.BoxGeometry(0.006, 0.15, 0.06)
+                : new THREE.BoxGeometry(0.15, 0.006, 0.06);
+            const ch = new THREE.Mesh(geomCh, materialAco);
+            ch.position.set(cx, cy, cz);
+            grupoMastroHorizontal.add(ch);
+            for (const d of [-0.045, 0.045]) {
+                const furo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.016, 12), materialFuro);
+                if (vertical) {
+                    furo.rotation.z = Math.PI / 2;
+                    furo.position.set(cx, cy + d, cz);
+                } else {
+                    furo.position.set(cx + d, cy, cz);
+                }
+                grupoMastroHorizontal.add(furo);
+            }
+        }
+        // 2 chapas na coluna do L (uma em cima, outra embaixo, 30 cm entre elas),
+        // dentro da folga, para parafusar na lateral da laje/platibanda
+        addChapaFuros(bitolaExt / 2 + 0.003, topY - 0.10, 0, true);
+        addChapaFuros(bitolaExt / 2 + 0.003, topY - 0.40, 0, true);
+        // 1 chapa sobre a platibanda, a 10 cm da solda do mastro com a coluna
+        addChapaFuros(0.10 + 0.075, topY - bitolaMastro / 2 - 0.003, 0, false);
+
+        // ---- Platibanda (mureta), afastada 3 cm do suporte ----
+        const altPlat = Math.max(altExt - bitolaMastro / 2, 0.1);
+        const geomPlat = new THREE.BoxGeometry(largPlatibanda, altPlat, 0.22);
         platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
-        platibandaMesh.position.set(bitolaExt / 2 + largPlatibanda / 2, topY - altExt / 2, 0);
+        platibandaMesh.position.set(bitolaExt / 2 + folga + largPlatibanda / 2, topY - bitolaMastro / 2 - altPlat / 2, 0);
         scene.add(platibandaMesh);
 
         // ---- PEÇA 2 (desenho): coluna vertical + diagonal + 2 luvas ----
@@ -126,7 +168,7 @@
         const totalGeralMetros = totalMetrosTubosPedido + totalMetrosDiagPedido;
 
         const totalBarras = Math.ceil(totalGeralMetros / 6);
-        const custoTotal = totalBarras * getPrecoBarra();
+        const custoMaterial = totalBarras * getPrecoBarra();
 
         // ---- Peso do aço (para galvanização, cobrada por kg) ----
         // Tubo de perfil vazado: peso = comprimento(m) × área da seção(mm²) × 0,00785
@@ -138,11 +180,18 @@
             const areaMM2 = b * b - interno * interno;
             return compM * areaMM2 * 0.00785; // kg
         }
+        const pesoChapas = 3 * (0.15 * 0.06 * 0.006 * 7850);   // 3 chapas 150×60×6
         const peso1Suporte = pesoTubo(compMastroEfetivo, bitolaMastro)
             + pesoTubo(altExt, bitolaExt)
             + pesoTubo(altInt, bitolaInt)
-            + pesoTubo(compDiag, bitolaDiag);
+            + pesoTubo(compDiag, bitolaDiag)
+            + pesoTubo(0.2, ladoLuva)                            // 2 luvas de 100 mm
+            + pesoChapas;
         const pesoTotal = peso1Suporte * qtdSuportes;
+
+        // ---- Galvanização (R$/kg, editável no topo) e custo total ----
+        const custoGalv = pesoTotal * getPrecoGalv();
+        const custoTotal = custoMaterial + custoGalv;
 
         document.getElementById('totalTubos').innerText = metros1SuporteTubos.toFixed(2) + ' m';
         document.getElementById('totalTubosQtd').innerText = totalMetrosTubosPedido.toFixed(2) + ' m';
@@ -154,6 +203,7 @@
         document.getElementById('totalBarras').innerText = totalBarras + ' barras (de 6m)';
         document.getElementById('totalPeso').innerText = peso1Suporte.toFixed(2) + ' kg';
         document.getElementById('totalPesoQtd').innerText = pesoTotal.toFixed(2) + ' kg';
+        document.getElementById('totalCustoGalv').innerText = formatBRL(custoGalv);
         document.getElementById('totalCustoSuporte').innerText = formatBRL(custoTotal);
     }
 
