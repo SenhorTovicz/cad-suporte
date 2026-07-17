@@ -74,7 +74,7 @@
         // ---- PEÇA 2 (posições): a coluna fica na face interna da platibanda. A
         // diagonal tem ângulo FIXO de 27° (como construída): mudar a coluna NÃO
         // mexe na diagonal e mudar a diagonal NÃO mexe na coluna.
-        const xLuvaA = bitolaExt / 2 + folga + largPlatibanda + bitolaInt / 2;
+        const xLuvaA = bitolaExt / 2 + folga + largPlatibanda + folga + bitolaInt / 2;
         const anguloDiag = 27 * Math.PI / 180;
         const alcanceDiag = compDiag * Math.cos(anguloDiag);
         const quedaDiag = compDiag * Math.sin(anguloDiag);
@@ -146,11 +146,11 @@
         // 1 chapa sobre a platibanda, a 10 cm da solda do mastro com a coluna
         addChapaFuros(0.10 + 0.075, topY - bitolaMastro / 2 - 0.003, 0, false);
 
-        // ---- Platibanda (mureta), afastada 3 cm do suporte ----
-        const altPlat = Math.max(altExt - bitolaMastro / 2, 0.1);
+        // ---- Platibanda (mureta), afastada 3 cm do suporte (lados, frente e topo) ----
+        const altPlat = Math.max(altExt - bitolaMastro / 2 - folga, 0.1);
         const geomPlat = new THREE.BoxGeometry(largPlatibanda, altPlat, 0.22);
         platibandaMesh = new THREE.Mesh(geomPlat, materialConcreto);
-        platibandaMesh.position.set(bitolaExt / 2 + folga + largPlatibanda / 2, topY - bitolaMastro / 2 - altPlat / 2, 0);
+        platibandaMesh.position.set(bitolaExt / 2 + folga + largPlatibanda / 2, topY - bitolaMastro / 2 - folga - altPlat / 2, 0);
         scene.add(platibandaMesh);
 
         // ---- PEÇA 2 (desenho): coluna vertical + diagonal + 2 luvas ----

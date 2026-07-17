@@ -299,7 +299,7 @@ function exportarProjetoSuporte() {
     const angD = 27; // ângulo fixo da diagonal (como construída)
     const reach = Math.round(diag * Math.cos(angD * Math.PI / 180));
     const dropD = Math.round(diag * Math.sin(angD * Math.PI / 180));
-    const xA = bitE / 2 + folga + plat + bitI / 2;
+    const xA = bitE / 2 + folga + plat + folga + bitI / 2;
     const xB = xA + reach;
     const Lme = Math.max(Lm, xB + 150);
     // Escala das peças: 1:10 nos padrões; encolhe se as barras crescerem
@@ -429,7 +429,7 @@ function exportarProjetoSuporte() {
     rc(x0 + hB / 2, yT + colL * s2 * 0.14, 0.5, colL * s2 * 0.3, 0.25);      // chapas coluna
     rc(x0 + hB / 2, yT + colL * s2 * 0.56, 0.5, colL * s2 * 0.3, 0.25);
     rc(X(100), yT + hB / 2, 150 * s2, 0.5, 0.25);                            // chapa topo
-    svg.push(`<rect x="${r1(X(bit / 2 + folga))}" y="${r1(yT + hB / 2 + 0.6)}" width="${r1(plat * s2)}" height="30" fill="none" stroke="#000" stroke-width="0.25" stroke-dasharray="1.4,1"/>`); // platibanda
+    svg.push(`<rect x="${r1(X(bit / 2 + folga))}" y="${r1(yT + hB / 2 + folga * s2)}" width="${r1(plat * s2)}" height="30" fill="none" stroke="#000" stroke-width="0.25" stroke-dasharray="1.4,1"/>`); // platibanda (folga no topo tb)
     tx(X(bit / 2 + folga) + plat * s2 / 2, yT + hB / 2 + 34.5, 'platibanda', 2.2);
     rc(X(xA) - hB / 2, yT, hB, colMF * s2);                                  // coluna MF
     svg.push(`<g transform="translate(${r1(X(xA))},${r1(yT + dropD * s2)}) rotate(${-angD})">`);
@@ -449,7 +449,7 @@ function exportarProjetoSuporte() {
     balao(X(xA) + reach * s2 * 0.55, yT + colMF * s2 * 0.45, X(xA) + reach * s2 * 0.55 + 7, yT + colMF * s2 * 0.45 + 7, '3');
     balao(X(xB), yT - 2, X(xB) + 8, yT + 11, '4');
     balao(x0 + hB / 2 + 0.5, yT + colL * s2 * 0.3, x0 - 6, yT + colL * s2 * 0.3 + 9, '5');
-    tx(170, 155, `Folga p/ platibanda: ${folga} mm • As luvas deslizam no mastro p/ regular o aperto`, 2.4);
+    tx(170, 155, `Folga p/ platibanda: ${folga} mm nos lados, na frente e no topo • As luvas deslizam p/ regular o aperto`, 2.4);
 
     // ============ PARTE DE BAIXO (toda EDITÁVEL) ============
     rc(7, 160, 90, 43);
