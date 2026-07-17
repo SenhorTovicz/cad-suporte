@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cad-suporte-v16';
+const CACHE_NAME = 'cad-suporte-v17';
 
 const ARQUIVOS_APP = [
     './',
@@ -9,6 +9,7 @@ const ARQUIVOS_APP = [
     './js/suporte.js',
     './js/grade.js',
     './js/guincho.js',
+    './js/projeto.js',
     './js/lib/three.min.js',
     './js/lib/OrbitControls.js',
     './icons/icon-192.png',

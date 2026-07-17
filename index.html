@@ -367,6 +367,7 @@
             </table>
 
             <button class="btn-salvar" onclick="salvarOrcamentoAtual('guincho')">💾 Salvar Orçamento</button>
+            <button class="btn-salvar btn-projeto" onclick="exportarProjetoGuincho()">📐 Projeto Técnico (PDF)</button>
         </div>
         <div id="canvas-guincho" class="canvas-container"></div>
     </div>
@@ -405,6 +406,7 @@
     <script src="js/suporte.js"></script>
     <script src="js/grade.js"></script>
     <script src="js/guincho.js"></script>
+    <script src="js/projeto.js"></script>
     <script>
         const toggleBtn = document.getElementById('painel-toggle-btn');
         const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho' };
