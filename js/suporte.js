@@ -209,9 +209,11 @@
             + pesoChapas;
         const pesoTotal = peso1Suporte * qtdSuportes;
 
-        // ---- Galvanização (R$/kg, editável no topo) e custo total ----
+        // ---- Galvanização (R$/kg), mão de obra (R$/suporte) e custo total ----
         const custoGalv = pesoTotal * getPrecoGalv();
-        const custoTotal = custoMaterial + custoGalv;
+        const maoObraUnit = lerNumInput('maoObra');
+        const custoMaoObra = maoObraUnit * qtdSuportes;
+        const custoTotal = custoMaterial + custoGalv + custoMaoObra;
 
         document.getElementById('totalTubos').innerText = metros1SuporteTubos.toFixed(2) + ' m';
         document.getElementById('totalTubosQtd').innerText = totalMetrosTubosPedido.toFixed(2) + ' m';
@@ -224,10 +226,12 @@
         document.getElementById('totalPeso').innerText = peso1Suporte.toFixed(2) + ' kg';
         document.getElementById('totalPesoQtd').innerText = pesoTotal.toFixed(2) + ' kg';
         document.getElementById('totalCustoGalv').innerText = formatBRL(custoGalv);
+        document.getElementById('maoObraUnit').innerText = formatBRL(maoObraUnit);
+        document.getElementById('totalMaoObra').innerText = formatBRL(custoMaoObra);
         document.getElementById('totalCustoSuporte').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['compMastro', 'bitolaMastro', 'altExt', 'bitolaExt', 'altInt', 'bitolaInt', 'compDiag', 'bitolaDiag', 'qtdSuportes', 'paredeTubo'];
+    const listaInputs = ['compMastro', 'bitolaMastro', 'altExt', 'bitolaExt', 'altInt', 'bitolaInt', 'compDiag', 'bitolaDiag', 'qtdSuportes', 'paredeTubo', 'maoObra'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
     });
@@ -263,6 +267,7 @@
             bitolaDiag: document.getElementById('bitolaDiag').value,
             qtdSuportes: document.getElementById('qtdSuportes').value,
             paredeTubo: document.getElementById('paredeTubo').value,
+            maoObra: document.getElementById('maoObra').value,
             resumo: {
                 totalGeral: document.getElementById('totalGeral').innerText,
                 totalBarras: document.getElementById('totalBarras').innerText,
@@ -284,6 +289,7 @@
         document.getElementById('bitolaDiag').value = dados.bitolaDiag;
         document.getElementById('qtdSuportes').value = dados.qtdSuportes;
         if (dados.paredeTubo !== undefined) document.getElementById('paredeTubo').value = dados.paredeTubo;
+        if (dados.maoObra !== undefined) document.getElementById('maoObra').value = dados.maoObra;
         atualizarModelo();
     }
 
