@@ -35,8 +35,15 @@
     let platibandaMesh;
 
     function atualizarModelo() {
-        while (grupoMastroHorizontal.children.length > 0) grupoMastroHorizontal.remove(grupoMastroHorizontal.children[0]);
-        if (platibandaMesh) scene.remove(platibandaMesh);
+        while (grupoMastroHorizontal.children.length > 0) {
+            const filho = grupoMastroHorizontal.children[0];
+            if (filho.geometry) filho.geometry.dispose();
+            grupoMastroHorizontal.remove(filho);
+        }
+        if (platibandaMesh) {
+            platibandaMesh.geometry.dispose();
+            scene.remove(platibandaMesh);
+        }
 
         const compMastro = lerNumInput('compMastro');
         const altExt = lerNumInput('altExt');
@@ -73,8 +80,10 @@
         const ladoLuva = bitolaMastro + 0.01;     // luva 60 mm p/ tubo de 50 mm
 
         // ---- PEÇA 1: L (mastro horizontal + coluna vertical soldada) ----
-        // Segurança: o mastro nunca fica curto a ponto de a 2ª luva sair da barra.
-        const compMastroEfetivo = Math.max(compMastro, xLuvaB + ladoLuva / 2 + 0.04);
+        // Segurança: o mastro nunca fica curto a ponto de a 2ª luva sair da barra,
+        // reservando também espaço p/ a ponta arredondada e o furo do cabo (0,15 m
+        // = meia luva 0,05 + folga p/ furo e arredondamento).
+        const compMastroEfetivo = Math.max(compMastro, xLuvaB + 0.15);
 
         // Mastro horizontal, encurtado na ponta para receber o arredondamento
         const geomMastro = new THREE.BoxGeometry(compMastroEfetivo - raioPonta, bitolaMastro, bitolaMastro);
@@ -121,10 +130,13 @@
                 grupoMastroHorizontal.add(furo);
             }
         }
-        // 2 chapas na coluna do L (uma em cima, outra embaixo, 30 cm entre elas),
-        // dentro da folga, para parafusar na lateral da laje/platibanda
-        addChapaFuros(bitolaExt / 2 + 0.003, topY - 0.10, 0, true);
-        addChapaFuros(bitolaExt / 2 + 0.003, topY - 0.40, 0, true);
+        // 2 chapas na coluna do L (uma em cima, outra embaixo — 30 cm entre elas na
+        // coluna padrão de 0,50 m), acompanhando a altura real da coluna
+        const recuoChapa = Math.min(0.10, altExt * 0.2);
+        const chapaTopo = topY - recuoChapa;
+        const chapaBaixo = topY - altExt + recuoChapa;
+        addChapaFuros(bitolaExt / 2 + 0.003, chapaTopo, 0, true);
+        if (chapaTopo - chapaBaixo >= 0.16) addChapaFuros(bitolaExt / 2 + 0.003, chapaBaixo, 0, true);
         // 1 chapa sobre a platibanda, a 10 cm da solda do mastro com a coluna
         addChapaFuros(0.10 + 0.075, topY - bitolaMastro / 2 - 0.003, 0, false);
 
@@ -160,7 +172,8 @@
         luvaB.position.set(xLuvaB, topY, 0);
         grupoMastroHorizontal.add(luvaB);
 
-        const metros1SuporteTubos = compMastroEfetivo + altExt + altInt;
+        // Tubos: mastro + colunas + 0,2 m das 2 luvas (também saem de barra)
+        const metros1SuporteTubos = compMastroEfetivo + altExt + altInt + 0.2;
         const metros1SuporteDiag = compDiag;
 
         const totalMetrosTubosPedido = metros1SuporteTubos * qtdSuportes;
@@ -242,6 +255,7 @@
             compDiag: document.getElementById('compDiag').value,
             bitolaDiag: document.getElementById('bitolaDiag').value,
             qtdSuportes: document.getElementById('qtdSuportes').value,
+            paredeTubo: document.getElementById('paredeTubo').value,
             resumo: {
                 totalGeral: document.getElementById('totalGeral').innerText,
                 totalBarras: document.getElementById('totalBarras').innerText,
@@ -262,6 +276,7 @@
         document.getElementById('compDiag').value = dados.compDiag;
         document.getElementById('bitolaDiag').value = dados.bitolaDiag;
         document.getElementById('qtdSuportes').value = dados.qtdSuportes;
+        if (dados.paredeTubo !== undefined) document.getElementById('paredeTubo').value = dados.paredeTubo;
         atualizarModelo();
     }
 

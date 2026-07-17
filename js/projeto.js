@@ -286,6 +286,9 @@ function exportarProjetoGuincho() {
 function exportarProjetoSuporte() {
     // ---- Medidas em mm, lidas dos inputs atuais ----
     const bit = Math.round(lerNumInput('bitolaMastro'));
+    const bitE = Math.round(lerNumInput('bitolaExt'));
+    const bitI = Math.round(lerNumInput('bitolaInt'));
+    const bitD = Math.round(lerNumInput('bitolaDiag'));
     const luva = bit + 10;
     const folga = 30;
     const plat = Math.round(lerNumInput('larguraPlatibanda') * 10);
@@ -295,17 +298,18 @@ function exportarProjetoSuporte() {
     const diag = Math.round(lerNumInput('compDiag') * 1000);
     const reach = Math.round(Math.sqrt(Math.max(diag * diag - colMF * colMF, 1)));
     const angD = Math.round(Math.atan2(colMF, reach) * 180 / Math.PI);
-    const xA = bit / 2 + folga + plat + bit / 2;
+    const xA = bitE / 2 + folga + plat + bitI / 2;
     const xB = xA + reach;
-    const Lme = Math.max(Lm, xB + luva / 2 + 40);
-    const s = 0.1;
+    const Lme = Math.max(Lm, xB + 150);
+    // Escala das peças: 1:10 nos padrões; encolhe se as barras crescerem
+    const s = Math.min(0.1, 200 / Lme, 110 / diag, 55 / Math.max(colL, colMF, 1));
 
-    // Pesos (parede informada na tela) e galvanização
-    const parede = lerNumInput('paredeTubo') || 3;
+    // Pesos (mesma fórmula do app: parede informada, peso por bitola de cada peça)
+    const parede = lerNumInput('paredeTubo');
     const kgm = (b) => (b * b - Math.max(0, b - 2 * parede) * Math.max(0, b - 2 * parede)) * 0.00785;
     const m50 = (Lme + colL + colMF + diag) / 1000;
     const m60 = 0.2;
-    const p50 = m50 * kgm(bit);
+    const p50 = (Lme * kgm(bit) + colL * kgm(bitE) + colMF * kgm(bitI) + diag * kgm(bitD)) / 1000;
     const p60 = m60 * kgm(luva);
     const pch = 3 * (0.15 * 0.06 * 0.006 * 7850);
     const ptot = p50 + p60 + pch;
@@ -362,34 +366,38 @@ function exportarProjetoSuporte() {
     const rP = mh / 2;
     rc(mx, my, Lme * s - rP, mh);                         // corpo do mastro
     svg.push(`<path d="M${r1(mfim - rP)},${r1(my)} A${r1(rP)},${r1(rP)} 0 0 1 ${r1(mfim - rP)},${r1(my + mh)}" fill="none" stroke="#000" stroke-width="0.35"/>`);
-    ci(mfim - 3.5, my + 1.4, 0.6);                        // furo do cabo (no alto)
-    ln(mfim - 3.5, my + 2, mfim - 9, my + 10, 0.16);
+    ci(mfim - 60 * s, my + 1.4, 0.6);                     // furo do cabo (a 60 da ponta)
+    ln(mfim - 60 * s, my + 2, mfim - 9, my + 10, 0.16);
     tx(mfim - 9, my + 12.6, 'Furo Ø14 p/ cabo de aço', 2.3, 'middle');
     // chapa soldada sob o mastro, a 100 da solda
-    rc(mx + 10, my + mh, 15, 0.7, 0.3);
-    dimH(mx, mx + 10, my + mh + 5.5, 100, my + mh + 0.7);
-    // coluna do L descendo na ponta esquerda + 2 chapas c/ furos
-    rc(mx, my, bit * s, colL * s);                        // coluna: y 16..66
-    rc(mx - 0.7, 21, 0.7, 15, 0.3);
-    rc(mx - 0.7, 51, 0.7, 15, 0.3);
-    ci(mx - 0.35, 24, 0.6, 0.2); ci(mx - 0.35, 33, 0.6, 0.2);
-    ci(mx - 0.35, 54, 0.6, 0.2); ci(mx - 0.35, 63, 0.6, 0.2);
+    rc(mx + 100 * s, my + mh, 150 * s, 0.7, 0.3);
+    dimH(mx, mx + 100 * s, my + mh + 5.5, 100, my + mh + 0.7);
+    // coluna do L descendo na ponta esquerda + chapas c/ furos (acompanham a coluna)
+    rc(mx, my, bit * s, colL * s);
+    const recuoCh = Math.min(100, colL * 0.2) * s;
+    const chT = my + recuoCh, chB = my + colL * s - recuoCh;
+    rc(mx - 0.7, chT - 75 * s, 0.7, 150 * s, 0.3);
+    ci(mx - 0.35, chT - 45 * s, 0.6, 0.2); ci(mx - 0.35, chT + 45 * s, 0.6, 0.2);
+    if (chB - chT >= 160 * s) {
+        rc(mx - 0.7, chB - 75 * s, 0.7, 150 * s, 0.3);
+        ci(mx - 0.35, chB - 45 * s, 0.6, 0.2); ci(mx - 0.35, chB + 45 * s, 0.6, 0.2);
+        dimV(chT, chB, mx + 9, Math.round((chB - chT) / s), mx + bit * s);
+    }
     dimH(mx, mfim, 12, Lme, my);
     dimV(my, my + colL * s, 10, colL, mx - 0.7);
-    dimV(28.5, 58.5, mx + 9, 300, mx + bit * s);
     tx(mfim - 24, my - 1.8, `ponta arredondada R${rP * 10}`, 2.3);
-    tx(115, 71, 'PEÇA 1 — "L" MASTRO + COLUNA (1x) — Tubo ' + bit + '×' + bit + '×3 mm', 2.8, 'middle', true);
-    tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna (300 entre centros) + 1 sob o mastro a 100 da solda', 2.4);
+    tx(115, 71, `PEÇA 1 — "L" MASTRO + COLUNA (1x) — Tubo ${bit}×${bit}×${parede} mm`, 2.8, 'middle', true);
+    tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna + 1 sob o mastro a 100 da solda', 2.4);
 
     // ============ PEÇA 2 — COLUNA M. FRANCESA / PEÇA 3 — DIAGONAL ============
     rc(15, 82, colMF * s, bit * s);
     dimH(15, 15 + colMF * s, 79.5, colMF, 82);
     tx(15 + colMF * s / 2, 92.5, 'PEÇA 2 — COLUNA M. FRANCESA (1x)', 2.6, 'middle', true);
-    tx(15 + colMF * s / 2, 96, `Tubo ${bit}×${bit}×3 mm`, 2.4);
+    tx(15 + colMF * s / 2, 96, `Tubo ${bitI}×${bitI}×${parede} mm`, 2.4);
     rc(80, 82, diag * s, bit * s);
     dimH(80, 80 + diag * s, 79.5, diag, 82);
     tx(80 + diag * s / 2, 92.5, 'PEÇA 3 — DIAGONAL (1x)', 2.6, 'middle', true);
-    tx(80 + diag * s / 2, 96, `Tubo ${bit}×${bit}×3 mm • cortes ${angD}°/${90 - angD}°`, 2.4);
+    tx(80 + diag * s / 2, 96, `Tubo ${bitD}×${bitD}×${parede} mm • cortes ${angD}°/${90 - angD}°`, 2.4);
     tx(245, 86, '1="L"  2=Coluna m.f.  3=Diagonal', 2.5);
     tx(245, 90, '4=Luvas  5=Chapas de fixação', 2.5);
 
@@ -399,7 +407,7 @@ function exportarProjetoSuporte() {
     dimV(14, 24, 244, 100, 232 + luva * s);
     tx(232 + luva * s / 2, 12.4, luva, 2.4);
     tx(237, 30, 'PEÇA 4 — LUVA (2x)', 2.6, 'middle', true);
-    tx(237, 33.5, `Tubo ${luva}×${luva}×3 × 100`, 2.4);
+    tx(237, 33.5, `Tubo ${luva}×${luva}×${parede} × 100`, 2.4);
 
     // ============ PEÇA 5 — CHAPA DE FIXAÇÃO (esc. 1:5) ============
     rc(226, 42, 30, 12);
@@ -411,7 +419,7 @@ function exportarProjetoSuporte() {
     tx(241, 67.5, 'furos 2× Ø12 (esc. 1:5)', 2.4);
 
     // ============ CONJUNTO — VISTA LATERAL ============
-    const s2 = Math.min(0.0667, 130 / Lme);
+    const s2 = Math.min(0.0667, 130 / Lme, 42 / Math.max(colL, colMF, 1));
     const x0 = 55, yT = 106;
     const X = (v) => x0 + v * s2;
     const hB = bit * s2;
@@ -456,8 +464,8 @@ function exportarProjetoSuporte() {
     rc(97, 160, 70, 43);
     tx(100, 166, 'Lista de material:', 3.2, 'start', true);
     edit(99.5, 168, 65.5, 34,
-        `Tubo ${bit}×${bit}×3 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
-        `Tubo ${luva}×${luva}×3 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
+        `Tubo ${bit}×${bit}×${parede} mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
+        `Tubo ${luva}×${luva}×${parede} mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
         'Chapa aço 150×60×6 mm — 3 pç<br/>' +
         'Chumbadores/parafusos Ø12 — 6 pç<br/>' +
         'Cabo de aço p/ interligar suportes — ver obra<br/>' +
@@ -478,7 +486,7 @@ function exportarProjetoSuporte() {
     edit(185.5, 178.3, 13, 5.4, '', 2.4, false, 'center');
     edit(199.5, 178.3, 12, 5.4, '', 2.2, false, 'center');
     ln(167, 190.5, 212, 190.5, 0.25); ln(167, 196.5, 212, 196.5, 0.25);
-    edit(168.5, 184.5, 42, 5.6, `Escala: 1:10 / 1:${Math.round(1 / s2)}`, 2.5);
+    edit(168.5, 184.5, 42, 5.6, `Escala: 1:${Math.round(1 / s)} / 1:${Math.round(1 / s2)}`, 2.5);
     edit(168.5, 190.8, 42, 5.4, 'Unidade: mm', 2.5);
     edit(168.5, 196.8, 42, 5.8, 'Ângulo: graus', 2.5);
 

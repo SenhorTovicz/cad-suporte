@@ -30,7 +30,11 @@
     scene.add(grupoGrade);
 
     function limparGrupo() {
-        while (grupoGrade.children.length > 0) grupoGrade.remove(grupoGrade.children[0]);
+        while (grupoGrade.children.length > 0) {
+            const filho = grupoGrade.children[0];
+            if (filho.geometry) filho.geometry.dispose();
+            grupoGrade.remove(filho);
+        }
     }
 
     function adicionarBarra(comprimento, bitola, x, y, z, vertical) {
