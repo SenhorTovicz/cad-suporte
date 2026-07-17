@@ -272,7 +272,6 @@ function exportarProjetoGuincho() {
 .ed:focus{background:rgba(241,196,15,.18)}
 @media print{body{background:#fff}.folha{box-shadow:none}.no-print,.dica{display:none}.ed:hover,.ed:focus{background:none}}</style></head>
 <body><button class="no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-<div class="dica no-print">✏️ A parte de baixo é editável: clique no texto e digite</div>
 <div class="folha">${svgStr}</div></body></html>`;
 
     const win = window.open('', '_blank');
@@ -521,7 +520,6 @@ function exportarProjetoSuporte() {
 .ed:focus{background:rgba(241,196,15,.18)}
 @media print{body{background:#fff}.folha{box-shadow:none}.no-print,.dica{display:none}.ed:hover,.ed:focus{background:none}}</style></head>
 <body><button class="no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-<div class="dica no-print">✏️ A parte de baixo é editável: clique no texto e digite</div>
 <div class="folha">${svgStr}</div></body></html>`;
 
     const win = window.open('', '_blank');

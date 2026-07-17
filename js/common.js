@@ -51,6 +51,14 @@ function initPrecoGalv(onChange) {
     });
 }
 
+// Campo numérico com valor lembrado entre sessões (ex.: mão de obra)
+function initCampoPersistente(id, key, padrao) {
+    const input = document.getElementById(id);
+    const salvo = localStorage.getItem(key);
+    input.value = salvo ? salvo : padrao;
+    input.addEventListener('input', () => localStorage.setItem(key, input.value));
+}
+
 function initTabs(onShow) {
     const botoes = document.querySelectorAll('.tab-btn');
     const views = document.querySelectorAll('.view');
