@@ -296,8 +296,9 @@ function exportarProjetoSuporte() {
     const colL = Math.round(lerNumInput('altExt') * 1000);
     const colMF = Math.round(lerNumInput('altInt') * 1000);
     const diag = Math.round(lerNumInput('compDiag') * 1000);
-    const reach = Math.round(Math.sqrt(Math.max(diag * diag - colMF * colMF, 1)));
-    const angD = Math.round(Math.atan2(colMF, reach) * 180 / Math.PI);
+    const angD = 27; // ângulo fixo da diagonal (como construída)
+    const reach = Math.round(diag * Math.cos(angD * Math.PI / 180));
+    const dropD = Math.round(diag * Math.sin(angD * Math.PI / 180));
     const xA = bitE / 2 + folga + plat + bitI / 2;
     const xB = xA + reach;
     const Lme = Math.max(Lm, xB + 150);
@@ -364,28 +365,27 @@ function exportarProjetoSuporte() {
     const mx = 15, my = 16, mh = bit * s;                 // mastro: y 16..21
     const mfim = mx + Lme * s;                            // ponta (215)
     const rP = mh / 2;
-    rc(mx, my, Lme * s - rP, mh);                         // corpo do mastro
-    svg.push(`<path d="M${r1(mfim - rP)},${r1(my)} A${r1(rP)},${r1(rP)} 0 0 1 ${r1(mfim - rP)},${r1(my + mh)}" fill="none" stroke="#000" stroke-width="0.35"/>`);
-    ci(mfim - 60 * s, my + 1.4, 0.6);                     // furo do cabo (a 60 da ponta)
-    ln(mfim - 60 * s, my + 2, mfim - 9, my + 10, 0.16);
+    // Contorno do mastro: canto de BAIXO da ponta reto (90°), topo arredondado R20
+    const rr = 20 * s;
+    svg.push(`<path d="M${r1(mx)},${r1(my)} L${r1(mfim - rr)},${r1(my)} A${r1(rr)},${r1(rr)} 0 0 1 ${r1(mfim)},${r1(my + rr)} L${r1(mfim)},${r1(my + mh)} L${r1(mx)},${r1(my + mh)} Z" fill="none" stroke="#000" stroke-width="0.35"/>`);
+    ci(mfim - 25 * s, my + 1.4, 0.6);                     // furo do cabo (a 25 da ponta)
+    ln(mfim - 25 * s, my + 2, mfim - 9, my + 10, 0.16);
     tx(mfim - 9, my + 12.6, 'Furo Ø14 p/ cabo de aço', 2.3, 'middle');
-    // chapa soldada sob o mastro, a 100 da solda
-    rc(mx + 100 * s, my + mh, 150 * s, 0.7, 0.3);
+    // chapa soldada sob o mastro, a 100 da solda (150 atravessado: vista de lado = 60)
+    rc(mx + 100 * s, my + mh, 60 * s, 0.7, 0.3);
     dimH(mx, mx + 100 * s, my + mh + 5.5, 100, my + mh + 0.7);
     // coluna do L descendo na ponta esquerda + chapas c/ furos (acompanham a coluna)
     rc(mx, my, bit * s, colL * s);
     const recuoCh = Math.min(100, colL * 0.2) * s;
     const chT = my + recuoCh, chB = my + colL * s - recuoCh;
-    rc(mx - 0.7, chT - 75 * s, 0.7, 150 * s, 0.3);
-    ci(mx - 0.35, chT - 45 * s, 0.6, 0.2); ci(mx - 0.35, chT + 45 * s, 0.6, 0.2);
-    if (chB - chT >= 160 * s) {
-        rc(mx - 0.7, chB - 75 * s, 0.7, 150 * s, 0.3);
-        ci(mx - 0.35, chB - 45 * s, 0.6, 0.2); ci(mx - 0.35, chB + 45 * s, 0.6, 0.2);
+    rc(mx - 0.7, chT - 30 * s, 0.7, 60 * s, 0.3);
+    if (chB - chT >= 70 * s) {
+        rc(mx - 0.7, chB - 30 * s, 0.7, 60 * s, 0.3);
         dimV(chT, chB, mx + 9, Math.round((chB - chT) / s), mx + bit * s);
     }
     dimH(mx, mfim, 12, Lme, my);
     dimV(my, my + colL * s, 10, colL, mx - 0.7);
-    tx(mfim - 24, my - 1.8, `ponta arredondada R${rP * 10}`, 2.3);
+    tx(mfim - 24, my - 1.8, 'topo arredondado R20 • baixo reto 90°', 2.3);
     tx(115, 71, `PEÇA 1 — "L" MASTRO + COLUNA (1x) — Tubo ${bit}×${bit}×${parede} mm`, 2.8, 'middle', true);
     tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna + 1 sob o mastro a 100 da solda', 2.4);
 
@@ -432,14 +432,14 @@ function exportarProjetoSuporte() {
     svg.push(`<rect x="${r1(X(bit / 2 + folga))}" y="${r1(yT + hB / 2 + 0.6)}" width="${r1(plat * s2)}" height="30" fill="none" stroke="#000" stroke-width="0.25" stroke-dasharray="1.4,1"/>`); // platibanda
     tx(X(bit / 2 + folga) + plat * s2 / 2, yT + hB / 2 + 34.5, 'platibanda', 2.2);
     rc(X(xA) - hB / 2, yT, hB, colMF * s2);                                  // coluna MF
-    svg.push(`<g transform="translate(${r1(X(xA))},${r1(yT + colMF * s2)}) rotate(${-angD})">`);
+    svg.push(`<g transform="translate(${r1(X(xA))},${r1(yT + dropD * s2)}) rotate(${-angD})">`);
     rc(0, -hB / 2, diag * s2, hB);                                           // diagonal
     svg.push('</g>');
     rc(X(xA) - 2, yT - 2, 4, 4, 0.4);                                        // luva A
     rc(X(xB) - 2, yT - 2, 4, 4, 0.4);                                        // luva B
-    ci(X(Lme - 60), yT - 1, 0.5);                                            // furo do cabo
-    ln(X(Lme - 60), yT + 0.5, X(Lme - 60) + 5, yT + 6, 0.16);
-    tx(X(Lme - 60) + 5.5, yT + 8.6, 'furo cabo', 2.2, 'start');
+    ci(X(Lme - 25), yT - 1, 0.5);                                            // furo do cabo
+    ln(X(Lme - 25), yT + 0.5, X(Lme - 25) + 4, yT + 6, 0.16);
+    tx(X(Lme - 25) + 4.5, yT + 8.6, 'furo cabo', 2.2, 'start');
     dimH(x0, X(Lme), 99, Lme, yT - hB / 2);
     dimV(yT, yT + colL * s2, 47, colL, x0 - hB / 2);
     dimH(X(xA), X(xB), 148, reach, yT + 4);
@@ -457,7 +457,7 @@ function exportarProjetoSuporte() {
     edit(9.5, 168, 85.5, 34,
         'Seguir ABNT NBR 17.152-2 — Redes de segurança contra quedas (requisitos de instalação).<br/>' +
         'Chapas parafusadas na laje/platibanda c/ chumbadores Ø12.<br/>' +
-        `Ponta arredondada (R${rP * 10}) p/ não danificar a tela.<br/>` +
+        'Topo da ponta arredondado (R20) p/ não danificar a tela.<br/>' +
         'Furo Ø14 no alto da ponta p/ cabo de aço entre suportes.<br/>' +
         'Soldar todo o perímetro; galvanização a fogo após solda.', 2.5, false, 'left', true);
 
