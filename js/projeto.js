@@ -371,9 +371,9 @@ function exportarProjetoSuporte() {
     ci(mfim - 25 * s, my + 1.4, 0.6);                     // furo do cabo (a 25 da ponta)
     ln(mfim - 25 * s, my + 2, mfim - 9, my + 10, 0.16);
     tx(mfim - 9, my + 12.6, 'Furo Ø14 p/ cabo de aço', 2.3, 'middle');
-    // chapa soldada sob o mastro, a 100 da solda (150 atravessado: vista de lado = 60)
-    rc(mx + 100 * s, my + mh, 60 * s, 0.7, 0.3);
-    dimH(mx, mx + 100 * s, my + mh + 5.5, 100, my + mh + 0.7);
+    // chapa soldada sob o mastro, a 70 da coluna (150 atravessado: vista de lado = 60)
+    rc(mx + 70 * s, my + mh, 60 * s, 0.7, 0.3);
+    dimH(mx, mx + 70 * s, my + mh + 5.5, 70, my + mh + 0.7);
     // coluna do L descendo na ponta esquerda + chapas c/ furos (acompanham a coluna)
     rc(mx, my, bit * s, colL * s);
     const recuoCh = Math.min(100, colL * 0.2) * s;
@@ -387,7 +387,7 @@ function exportarProjetoSuporte() {
     dimV(my, my + colL * s, 10, colL, mx - 0.7);
     tx(mfim - 24, my - 1.8, 'topo arredondado R20 • baixo reto 90°', 2.3);
     tx(115, 71, `PEÇA 1 — "L" MASTRO + COLUNA (1x) — Tubo ${bit}×${bit}×${parede} mm`, 2.8, 'middle', true);
-    tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna + 1 sob o mastro a 100 da solda', 2.4);
+    tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna + 1 sob o mastro a 70 da coluna', 2.4);
 
     // ============ PEÇA 2 — COLUNA M. FRANCESA / PEÇA 3 — DIAGONAL ============
     rc(15, 82, colMF * s, bit * s);
@@ -428,7 +428,7 @@ function exportarProjetoSuporte() {
     rc(x0 - hB / 2, yT, hB, colL * s2);                                      // coluna do L
     rc(x0 + hB / 2, yT + colL * s2 * 0.14, 0.5, colL * s2 * 0.3, 0.25);      // chapas coluna
     rc(x0 + hB / 2, yT + colL * s2 * 0.56, 0.5, colL * s2 * 0.3, 0.25);
-    rc(X(100), yT + hB / 2, 150 * s2, 0.5, 0.25);                            // chapa topo
+    rc(X(70), yT + hB / 2, 60 * s2, 0.5, 0.25);                              // chapa topo
     svg.push(`<rect x="${r1(X(bit / 2 + folga))}" y="${r1(yT + hB / 2 + folga * s2)}" width="${r1(plat * s2)}" height="30" fill="none" stroke="#000" stroke-width="0.25" stroke-dasharray="1.4,1"/>`); // platibanda (folga no topo tb)
     tx(X(bit / 2 + folga) + plat * s2 / 2, yT + hB / 2 + 34.5, 'platibanda', 2.2);
     rc(X(xA) - hB / 2, yT, hB, colMF * s2);                                  // coluna MF
