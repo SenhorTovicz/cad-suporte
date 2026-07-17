@@ -59,6 +59,14 @@ function exportarProjetoGuincho() {
         ci(bx, by, 2.2, 0.3);
         tx(bx, by + 0.95, n, 2.7, 'middle', true);
     }
+    // Campo de texto EDITÁVEL na folha (clicável na janela do projeto)
+    function edit(x, y, w, h, html, size, bold, align, multi) {
+        const just = align === 'center' ? 'center' : 'flex-start';
+        const style = multi
+            ? `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;line-height:1.62;`
+            : `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;display:flex;align-items:center;justify-content:${just};${align === 'center' ? 'text-align:center;' : ''}`;
+        svg.push(`<foreignObject x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}"><div xmlns="http://www.w3.org/1999/xhtml" contenteditable="true" class="ed" style="width:100%;height:100%;overflow:hidden;${style}">${html}</div></foreignObject>`);
+    }
 
     // ================= FOLHA =================
     rc(4, 4, 289, 202, 0.7);      // margem externa
@@ -187,45 +195,48 @@ function exportarProjetoGuincho() {
     balao(xR - 1, Y(30) - 4, xR - 7.5, Y(30) - 10, '6');
     tx(250, 146, `Vão p/ laje: ${espLaje} mm • folga frontal: 50 mm`, 2.4);
 
+    // ============ PARTE DE BAIXO (toda EDITÁVEL na janela do projeto) ============
+
     // ================= OBS =================
     rc(7, 160, 90, 43);
     tx(10, 166, 'Obs:', 3.2, 'start', true);
-    const obs = [
-        'Seguir NR-18 (Ind. da Construção) e NR-11',
-        '(movimentação de cargas) na montagem e uso.',
-        'Soldar todo o perímetro das juntas.',
-        'Galvanização a fogo após solda e furação.',
-        '3 mãos francesas iguais: 1 central + 2 laterais a 65°.',
-        'Regulagem de altura: pino Ø12 nos furos da luva.'
-    ];
-    obs.forEach((t, i) => tx(10, 171.5 + i * 4.6, t, 2.5, 'start'));
+    edit(9.5, 168, 85.5, 34,
+        'Seguir NR-18 (Ind. da Construção) e NR-11 (movimentação de cargas) na montagem e uso.<br/>' +
+        'Soldar todo o perímetro das juntas.<br/>' +
+        'Galvanização a fogo após solda e furação.<br/>' +
+        '3 mãos francesas iguais: 1 central + 2 laterais a 65°.<br/>' +
+        'Regulagem de altura: pino Ø12 nos furos da luva.', 2.5, false, 'left', true);
 
     // ================= LISTA DE MATERIAL =================
     rc(97, 160, 70, 43);
     tx(100, 166, 'Lista de material:', 3.2, 'start', true);
-    const lista = [
-        `Tubo ${bit}×${bit}×3 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)`,
-        `Tubo ${ladoLuva}×${ladoLuva}×3 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)`,
-        'Chapa aço 250×100×6 mm — 1 pç',
-        'Barra roscada c/ borracha — 3 pç',
-        'Pino Ø12 — 1 pç • Parafusos M10 — 2 pç',
-        'Motor guincho + fonte/bateria — 1 cj'
-    ];
-    lista.forEach((t, i) => tx(100, 171.5 + i * 4.4, t, 2.4, 'start'));
-    tx(100, 171.5 + 6 * 4.4, `Peso do aço ≈ ${ptot.toFixed(1)} kg (p/ galvanização)`, 2.4, 'start', true);
+    edit(99.5, 168, 65.5, 34,
+        `Tubo ${bit}×${bit}×3 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
+        `Tubo ${ladoLuva}×${ladoLuva}×3 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
+        'Chapa aço 250×100×6 mm — 1 pç<br/>' +
+        'Barra roscada c/ borracha — 3 pç<br/>' +
+        'Pino Ø12 — 1 pç • Parafusos M10 — 2 pç<br/>' +
+        'Motor guincho + fonte/bateria — 1 cj<br/>' +
+        `<b>Peso do aço ≈ ${ptot.toFixed(1)} kg (p/ galvanização)</b>`, 2.4, false, 'left', true);
 
     // ================= TABELA (nomes/escala) =================
     rc(167, 160, 45, 43);
     ln(167, 166, 212, 166, 0.25); ln(167, 172, 212, 172, 0.25); ln(167, 178, 212, 178, 0.25); ln(167, 184, 212, 184, 0.25);
     ln(185, 160, 185, 184, 0.25); ln(199, 160, 199, 184, 0.25);
     tx(192, 164.4, 'Nome', 2.4); tx(205.5, 164.4, 'Data', 2.4);
-    tx(169, 170.4, 'Desenho', 2.4, 'start'); tx(192, 170.4, 'Lenon', 2.4); tx(205.5, 170.4, hoje, 2.2);
+    tx(169, 170.4, 'Desenho', 2.4, 'start');
     tx(169, 176.4, 'Checado', 2.4, 'start');
     tx(169, 182.4, 'Aprovado', 2.4, 'start');
+    edit(185.5, 166.3, 13, 5.4, 'Lenon', 2.4, false, 'center');
+    edit(199.5, 166.3, 12, 5.4, hoje, 2.2, false, 'center');
+    edit(185.5, 172.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 172.3, 12, 5.4, '', 2.2, false, 'center');
+    edit(185.5, 178.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 178.3, 12, 5.4, '', 2.2, false, 'center');
     ln(167, 190.5, 212, 190.5, 0.25); ln(167, 196.5, 212, 196.5, 0.25);
-    tx(169, 188.7, 'Escala: 1:10', 2.5, 'start');
-    tx(169, 194.9, 'Unidade: mm', 2.5, 'start');
-    tx(169, 201, 'Ângulo: graus', 2.5, 'start');
+    edit(168.5, 184.5, 42, 5.6, 'Escala: 1:10', 2.5);
+    edit(168.5, 190.8, 42, 5.4, 'Unidade: mm', 2.5);
+    edit(168.5, 196.8, 42, 5.8, 'Ângulo: graus', 2.5);
 
     // ================= CARIMBO =================
     rc(212, 160, 78, 43);
@@ -235,13 +246,13 @@ function exportarProjetoGuincho() {
     ln(212, 190, 290, 190, 0.35);
     ln(212, 196, 290, 196, 0.35);
     ln(254, 196, 254, 203, 0.35);
-    tx(251, 167.3, 'GVTECK', 6, 'middle', true);
-    tx(214, 175, 'Obra: Guincho de coluna p/ içamento', 3.1, 'start', true);
-    tx(214, 182.6, 'Desenho: Guincho — fixação na laje', 2.8, 'start', true);
-    tx(214, 188.6, 'Endereço obra:', 2.3, 'start');
-    tx(214, 194.4, 'Engenheiro: ______________  CREA: ______', 2.5, 'start');
-    tx(214, 200.8, 'CNO:', 2.5, 'start');
-    tx(272, 200.8, 'Prancha: 1/1', 2.7, 'middle', true);
+    edit(213, 160.6, 76, 9, 'GVTECK', 6, true, 'center');
+    edit(213.5, 170.4, 76, 7.2, 'Obra: Guincho de coluna p/ içamento', 3.1, true);
+    edit(213.5, 178.3, 76, 6.4, 'Desenho: Guincho — fixação na laje', 2.8, true);
+    edit(213.5, 185.2, 76, 4.6, 'Endereço obra:', 2.3);
+    edit(213.5, 190.3, 76, 5.4, 'Engenheiro: ______________  CREA: ______', 2.5);
+    edit(213.5, 196.4, 39.5, 6.2, 'CNO:', 2.5);
+    edit(255, 196.4, 34, 6.2, 'Prancha: 1/1', 2.7, true, 'center');
 
     const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" width="297mm" height="210mm">
 <defs><marker id="seta" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0.7 L5.5,3 L0,5.3 Z"/></marker></defs>
@@ -253,8 +264,13 @@ function exportarProjetoGuincho() {
 .folha{width:297mm;height:210mm;background:#fff;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.45)}
 .folha svg{display:block}
 .no-print{position:fixed;top:12px;right:14px;padding:11px 18px;background:#27ae60;color:#fff;border:none;border-radius:6px;font:600 14px Arial;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-@media print{body{background:#fff}.folha{box-shadow:none}.no-print{display:none}}</style></head>
+.dica{position:fixed;top:12px;left:14px;padding:9px 14px;background:#2c3e50;color:#fff;border-radius:6px;font:600 12px Arial;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ed{outline:none;cursor:text}
+.ed:hover{background:rgba(41,128,185,.12)}
+.ed:focus{background:rgba(241,196,15,.18)}
+@media print{body{background:#fff}.folha{box-shadow:none}.no-print,.dica{display:none}.ed:hover,.ed:focus{background:none}}</style></head>
 <body><button class="no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+<div class="dica no-print">✏️ A parte de baixo é editável: clique no texto e digite</div>
 <div class="folha">${svgStr}</div></body></html>`;
 
     const win = window.open('', '_blank');
