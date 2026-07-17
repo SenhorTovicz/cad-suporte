@@ -22,8 +22,10 @@
         <button class="tab-btn" data-tab="historico">Histórico</button>
         <button id="painel-toggle-btn" data-painel-toggle="painel-suporte">☰ Medidas</button>
         <div id="precoGlobal">
-            <label for="precoBarra">Preço barra 6m (R$)</label>
+            <label for="precoBarra">Barra 6m (R$)</label>
             <input type="number" id="precoBarra" step="0.01" min="0">
+            <label for="precoGalv">Galv. (R$/kg)</label>
+            <input type="number" id="precoGalv" step="0.01" min="0" style="width: 60px;">
         </div>
     </div>
 
@@ -53,23 +55,23 @@
                 <tbody>
                     <tr>
                         <td>Mastro do L (horiz.)</td>
-                        <td><input type="number" id="compMastro" value="1.75" step="0.05"></td>
-                        <td><input type="number" id="bitolaMastro" value="60"></td>
+                        <td><input type="number" id="compMastro" value="2.00" step="0.05"></td>
+                        <td><input type="number" id="bitolaMastro" value="50"></td>
                     </tr>
                     <tr>
                         <td>Coluna do L (vert.)</td>
                         <td><input type="number" id="altExt" value="0.50" step="0.05"></td>
-                        <td><input type="number" id="bitolaExt" value="60"></td>
+                        <td><input type="number" id="bitolaExt" value="50"></td>
                     </tr>
                     <tr>
                         <td>Coluna mão francesa</td>
                         <td><input type="number" id="altInt" value="0.50" step="0.05"></td>
-                        <td><input type="number" id="bitolaInt" value="60"></td>
+                        <td><input type="number" id="bitolaInt" value="50"></td>
                     </tr>
                     <tr>
                         <td>Diagonal mão francesa</td>
-                        <td><input type="number" id="compDiag" value="0.68" step="0.01"></td>
-                        <td><input type="number" id="bitolaDiag" value="60"></td>
+                        <td><input type="number" id="compDiag" value="1.10" step="0.01"></td>
+                        <td><input type="number" id="bitolaDiag" value="50"></td>
                     </tr>
                 </tbody>
             </table>
@@ -119,12 +121,17 @@
                         <td><b id="totalBarras" style="color: #2e7d32;">0.00 barras</b></td>
                     </tr>
                     <tr class="linha-peso">
-                        <td>Peso do aço (galvanização)</td>
+                        <td>Peso do aço</td>
                         <td><span id="totalPeso">0.00 kg</span></td>
                         <td><b id="totalPesoQtd" style="color: #6a1b9a;">0.00 kg</b></td>
                     </tr>
+                    <tr class="linha-peso">
+                        <td>Galvanização (R$/kg)</td>
+                        <td><span>-</span></td>
+                        <td><b id="totalCustoGalv" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
                     <tr class="linha-custo">
-                        <td>Custo Total</td>
+                        <td>Custo Total (mat. + galv.)</td>
                         <td><span>-</span></td>
                         <td><b id="totalCustoSuporte" style="color: #d35400;">R$ 0,00</b></td>
                     </tr>
@@ -132,6 +139,7 @@
             </table>
 
             <button class="btn-salvar" onclick="salvarOrcamentoAtual('suporte')">💾 Salvar Orçamento</button>
+            <button class="btn-salvar btn-projeto" onclick="exportarProjetoSuporte()">📐 Projeto Técnico (PDF)</button>
         </div>
         <div id="canvas-suporte" class="canvas-container"></div>
     </div>
@@ -401,6 +409,7 @@
     <script src="js/common.js"></script>
     <script>
         initPrecoBarra(() => document.dispatchEvent(new Event('preco-changed')));
+        initPrecoGalv(() => document.dispatchEvent(new Event('preco-changed')));
         initPainelToggle();
     </script>
     <script src="js/suporte.js"></script>

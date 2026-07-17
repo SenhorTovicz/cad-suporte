@@ -42,8 +42,15 @@
     let lajeMesh;
 
     function limpar() {
-        while (grupo.children.length > 0) grupo.remove(grupo.children[0]);
-        if (lajeMesh) scene.remove(lajeMesh);
+        while (grupo.children.length > 0) {
+            const filho = grupo.children[0];
+            if (filho.geometry) filho.geometry.dispose();
+            grupo.remove(filho);
+        }
+        if (lajeMesh) {
+            lajeMesh.geometry.dispose();
+            scene.remove(lajeMesh);
+        }
     }
 
     function addBarra(comp, bitola, x, y, z, eixo, material) {

@@ -248,7 +248,7 @@ function exportarProjetoGuincho() {
     ln(212, 190, 290, 190, 0.35);
     ln(212, 196, 290, 196, 0.35);
     ln(254, 196, 254, 203, 0.35);
-    edit(213, 160.6, 76, 9, 'GVTECK', 6, true, 'center');
+    edit(213, 160.6, 76, 9, '', 6, true, 'center');
     edit(213.5, 170.4, 76, 7.2, 'Obra: Guincho de coluna p/ içamento', 3.1, true);
     edit(213.5, 178.3, 76, 6.4, 'Desenho: Guincho — fixação na laje', 2.8, true);
     edit(213.5, 185.2, 76, 4.6, 'Endereço obra:', 2.3);
@@ -262,6 +262,255 @@ function exportarProjetoGuincho() {
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>Projeto Técnico — Guincho de Coluna</title>
+<style>@page{size:A4 landscape;margin:0}body{margin:0;background:#7f8c8d}
+.folha{width:297mm;height:210mm;background:#fff;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.45)}
+.folha svg{display:block}
+.no-print{position:fixed;top:12px;right:14px;padding:11px 18px;background:#27ae60;color:#fff;border:none;border-radius:6px;font:600 14px Arial;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.dica{position:fixed;top:12px;left:14px;padding:9px 14px;background:#2c3e50;color:#fff;border-radius:6px;font:600 12px Arial;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ed{outline:none;cursor:text}
+.ed:hover{background:rgba(41,128,185,.12)}
+.ed:focus{background:rgba(241,196,15,.18)}
+@media print{body{background:#fff}.folha{box-shadow:none}.no-print,.dica{display:none}.ed:hover,.ed:focus{background:none}}</style></head>
+<body><button class="no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+<div class="dica no-print">✏️ A parte de baixo é editável: clique no texto e digite</div>
+<div class="folha">${svgStr}</div></body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { window.alert('O navegador bloqueou a janela do projeto. Permita pop-ups para este site.'); return; }
+    win.document.write(html);
+    win.document.close();
+}
+
+// Gera o projeto técnico (prancha A4 paisagem) do SUPORTE DE TELA, com as
+// medidas atuais da tabela — peças cotadas, conjunto lateral e carimbo editável.
+function exportarProjetoSuporte() {
+    // ---- Medidas em mm, lidas dos inputs atuais ----
+    const bit = Math.round(lerNumInput('bitolaMastro'));
+    const bitE = Math.round(lerNumInput('bitolaExt'));
+    const bitI = Math.round(lerNumInput('bitolaInt'));
+    const bitD = Math.round(lerNumInput('bitolaDiag'));
+    const luva = bit + 10;
+    const folga = 30;
+    const plat = Math.round(lerNumInput('larguraPlatibanda') * 10);
+    const Lm = Math.round(lerNumInput('compMastro') * 1000);
+    const colL = Math.round(lerNumInput('altExt') * 1000);
+    const colMF = Math.round(lerNumInput('altInt') * 1000);
+    const diag = Math.round(lerNumInput('compDiag') * 1000);
+    const reach = Math.round(Math.sqrt(Math.max(diag * diag - colMF * colMF, 1)));
+    const angD = Math.round(Math.atan2(colMF, reach) * 180 / Math.PI);
+    const xA = bitE / 2 + folga + plat + bitI / 2;
+    const xB = xA + reach;
+    const Lme = Math.max(Lm, xB + 150);
+    // Escala das peças: 1:10 nos padrões; encolhe se as barras crescerem
+    const s = Math.min(0.1, 200 / Lme, 110 / diag, 55 / Math.max(colL, colMF, 1));
+
+    // Pesos (mesma fórmula do app: parede informada, peso por bitola de cada peça)
+    const parede = lerNumInput('paredeTubo');
+    const kgm = (b) => (b * b - Math.max(0, b - 2 * parede) * Math.max(0, b - 2 * parede)) * 0.00785;
+    const m50 = (Lme + colL + colMF + diag) / 1000;
+    const m60 = 0.2;
+    const p50 = (Lme * kgm(bit) + colL * kgm(bitE) + colMF * kgm(bitI) + diag * kgm(bitD)) / 1000;
+    const p60 = m60 * kgm(luva);
+    const pch = 3 * (0.15 * 0.06 * 0.006 * 7850);
+    const ptot = p50 + p60 + pch;
+    const custoGalv = ptot * getPrecoGalv();
+
+    const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const r1 = (v) => Math.round(v * 100) / 100;
+
+    const svg = [];
+    const ln = (x1, y1, x2, y2, w, dash) =>
+        svg.push(`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" stroke="#000" stroke-width="${w || 0.35}"${dash ? ' stroke-dasharray="1.2,1"' : ''}/>`);
+    const rc = (x, y, w, h, sw) =>
+        svg.push(`<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="none" stroke="#000" stroke-width="${sw || 0.35}"/>`);
+    const ci = (x, y, r, sw) =>
+        svg.push(`<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(r)}" fill="none" stroke="#000" stroke-width="${sw || 0.25}"/>`);
+    const tx = (x, y, t, size, anchor, bold, rot) =>
+        svg.push(`<text x="${r1(x)}" y="${r1(y)}" font-size="${size || 2.8}" text-anchor="${anchor || 'middle'}" font-family="Arial, Helvetica, sans-serif"${bold ? ' font-weight="bold"' : ''}${rot ? ` transform="rotate(${rot} ${r1(x)} ${r1(y)})"` : ''}>${t}</text>`);
+    const dimLine = (x1, y1, x2, y2) =>
+        svg.push(`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" stroke="#000" stroke-width="0.16" marker-start="url(#seta)" marker-end="url(#seta)"/>`);
+    function dimH(x1, x2, y, label, ey) {
+        const d = y >= ey ? 1 : -1;
+        ln(x1, ey, x1, y + 1.2 * d, 0.16);
+        ln(x2, ey, x2, y + 1.2 * d, 0.16);
+        dimLine(x1, y, x2, y);
+        tx((x1 + x2) / 2, y - 1, label, 2.6);
+    }
+    function dimV(y1, y2, x, label, ex) {
+        const d = x >= ex ? 1 : -1;
+        ln(ex, y1, x + 1.2 * d, y1, 0.16);
+        ln(ex, y2, x + 1.2 * d, y2, 0.16);
+        dimLine(x, y1, x, y2);
+        tx(x - 1, (y1 + y2) / 2, label, 2.6, 'middle', false, -90);
+    }
+    function balao(px, py, bx, by, n) {
+        ln(px, py, bx, by, 0.16);
+        ci(bx, by, 2.2, 0.3);
+        tx(bx, by + 0.95, n, 2.7, 'middle', true);
+    }
+    function edit(x, y, w, h, html, size, bold, align, multi) {
+        const just = align === 'center' ? 'center' : 'flex-start';
+        const style = multi
+            ? `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;line-height:1.62;`
+            : `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;display:flex;align-items:center;justify-content:${just};${align === 'center' ? 'text-align:center;' : ''}`;
+        svg.push(`<foreignObject x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}"><div xmlns="http://www.w3.org/1999/xhtml" contenteditable="true" class="ed" style="width:100%;height:100%;overflow:hidden;${style}">${html}</div></foreignObject>`);
+    }
+
+    // ================= FOLHA =================
+    rc(4, 4, 289, 202, 0.7);
+    rc(7, 7, 283, 196, 0.35);
+
+    // ============ PEÇA 1 — "L" (MASTRO + COLUNA), c/ ponta arredondada ============
+    const mx = 15, my = 16, mh = bit * s;                 // mastro: y 16..21
+    const mfim = mx + Lme * s;                            // ponta (215)
+    const rP = mh / 2;
+    rc(mx, my, Lme * s - rP, mh);                         // corpo do mastro
+    svg.push(`<path d="M${r1(mfim - rP)},${r1(my)} A${r1(rP)},${r1(rP)} 0 0 1 ${r1(mfim - rP)},${r1(my + mh)}" fill="none" stroke="#000" stroke-width="0.35"/>`);
+    ci(mfim - 60 * s, my + 1.4, 0.6);                     // furo do cabo (a 60 da ponta)
+    ln(mfim - 60 * s, my + 2, mfim - 9, my + 10, 0.16);
+    tx(mfim - 9, my + 12.6, 'Furo Ø14 p/ cabo de aço', 2.3, 'middle');
+    // chapa soldada sob o mastro, a 100 da solda
+    rc(mx + 100 * s, my + mh, 150 * s, 0.7, 0.3);
+    dimH(mx, mx + 100 * s, my + mh + 5.5, 100, my + mh + 0.7);
+    // coluna do L descendo na ponta esquerda + chapas c/ furos (acompanham a coluna)
+    rc(mx, my, bit * s, colL * s);
+    const recuoCh = Math.min(100, colL * 0.2) * s;
+    const chT = my + recuoCh, chB = my + colL * s - recuoCh;
+    rc(mx - 0.7, chT - 75 * s, 0.7, 150 * s, 0.3);
+    ci(mx - 0.35, chT - 45 * s, 0.6, 0.2); ci(mx - 0.35, chT + 45 * s, 0.6, 0.2);
+    if (chB - chT >= 160 * s) {
+        rc(mx - 0.7, chB - 75 * s, 0.7, 150 * s, 0.3);
+        ci(mx - 0.35, chB - 45 * s, 0.6, 0.2); ci(mx - 0.35, chB + 45 * s, 0.6, 0.2);
+        dimV(chT, chB, mx + 9, Math.round((chB - chT) / s), mx + bit * s);
+    }
+    dimH(mx, mfim, 12, Lme, my);
+    dimV(my, my + colL * s, 10, colL, mx - 0.7);
+    tx(mfim - 24, my - 1.8, `ponta arredondada R${rP * 10}`, 2.3);
+    tx(115, 71, `PEÇA 1 — "L" MASTRO + COLUNA (1x) — Tubo ${bit}×${bit}×${parede} mm`, 2.8, 'middle', true);
+    tx(115, 74.5, 'Chapas 150×60×6 soldadas: 2 na coluna + 1 sob o mastro a 100 da solda', 2.4);
+
+    // ============ PEÇA 2 — COLUNA M. FRANCESA / PEÇA 3 — DIAGONAL ============
+    rc(15, 82, colMF * s, bit * s);
+    dimH(15, 15 + colMF * s, 79.5, colMF, 82);
+    tx(15 + colMF * s / 2, 92.5, 'PEÇA 2 — COLUNA M. FRANCESA (1x)', 2.6, 'middle', true);
+    tx(15 + colMF * s / 2, 96, `Tubo ${bitI}×${bitI}×${parede} mm`, 2.4);
+    rc(80, 82, diag * s, bit * s);
+    dimH(80, 80 + diag * s, 79.5, diag, 82);
+    tx(80 + diag * s / 2, 92.5, 'PEÇA 3 — DIAGONAL (1x)', 2.6, 'middle', true);
+    tx(80 + diag * s / 2, 96, `Tubo ${bitD}×${bitD}×${parede} mm • cortes ${angD}°/${90 - angD}°`, 2.4);
+    tx(245, 86, '1="L"  2=Coluna m.f.  3=Diagonal', 2.5);
+    tx(245, 90, '4=Luvas  5=Chapas de fixação', 2.5);
+
+    // ============ PEÇA 4 — LUVA (2x) ============
+    rc(232, 14, luva * s, 10);
+    ci(232 + luva * s / 2, 19, 0.55);
+    dimV(14, 24, 244, 100, 232 + luva * s);
+    tx(232 + luva * s / 2, 12.4, luva, 2.4);
+    tx(237, 30, 'PEÇA 4 — LUVA (2x)', 2.6, 'middle', true);
+    tx(237, 33.5, `Tubo ${luva}×${luva}×${parede} × 100`, 2.4);
+
+    // ============ PEÇA 5 — CHAPA DE FIXAÇÃO (esc. 1:5) ============
+    rc(226, 42, 30, 12);
+    ci(232, 48, 1.2, 0.3); ci(250, 48, 1.2, 0.3);
+    dimH(232, 250, 39, 90, 48);
+    dimH(226, 256, 58, 150, 54);
+    dimV(42, 54, 262, 60, 256);
+    tx(241, 64, 'PEÇA 5 — CHAPA 150×60×6 (3x)', 2.6, 'middle', true);
+    tx(241, 67.5, 'furos 2× Ø12 (esc. 1:5)', 2.4);
+
+    // ============ CONJUNTO — VISTA LATERAL ============
+    const s2 = Math.min(0.0667, 130 / Lme, 42 / Math.max(colL, colMF, 1));
+    const x0 = 55, yT = 106;
+    const X = (v) => x0 + v * s2;
+    const hB = bit * s2;
+    tx(240, 98.5, `CONJUNTO — VISTA LATERAL (esc. 1:${Math.round(1 / s2)})`, 2.8, 'middle', true);
+    rc(x0 - hB / 2, yT - hB / 2, Lme * s2 + hB / 2, hB);                     // mastro
+    rc(x0 - hB / 2, yT, hB, colL * s2);                                      // coluna do L
+    rc(x0 + hB / 2, yT + colL * s2 * 0.14, 0.5, colL * s2 * 0.3, 0.25);      // chapas coluna
+    rc(x0 + hB / 2, yT + colL * s2 * 0.56, 0.5, colL * s2 * 0.3, 0.25);
+    rc(X(100), yT + hB / 2, 150 * s2, 0.5, 0.25);                            // chapa topo
+    svg.push(`<rect x="${r1(X(bit / 2 + folga))}" y="${r1(yT + hB / 2 + 0.6)}" width="${r1(plat * s2)}" height="30" fill="none" stroke="#000" stroke-width="0.25" stroke-dasharray="1.4,1"/>`); // platibanda
+    tx(X(bit / 2 + folga) + plat * s2 / 2, yT + hB / 2 + 34.5, 'platibanda', 2.2);
+    rc(X(xA) - hB / 2, yT, hB, colMF * s2);                                  // coluna MF
+    svg.push(`<g transform="translate(${r1(X(xA))},${r1(yT + colMF * s2)}) rotate(${-angD})">`);
+    rc(0, -hB / 2, diag * s2, hB);                                           // diagonal
+    svg.push('</g>');
+    rc(X(xA) - 2, yT - 2, 4, 4, 0.4);                                        // luva A
+    rc(X(xB) - 2, yT - 2, 4, 4, 0.4);                                        // luva B
+    ci(X(Lme - 60), yT - 1, 0.5);                                            // furo do cabo
+    ln(X(Lme - 60), yT + 0.5, X(Lme - 60) + 5, yT + 6, 0.16);
+    tx(X(Lme - 60) + 5.5, yT + 8.6, 'furo cabo', 2.2, 'start');
+    dimH(x0, X(Lme), 99, Lme, yT - hB / 2);
+    dimV(yT, yT + colL * s2, 47, colL, x0 - hB / 2);
+    dimH(X(xA), X(xB), 148, reach, yT + 4);
+    // balões
+    balao(X(700), yT + hB / 2, X(700) - 6, yT + 10, '1');
+    balao(X(xA) + hB / 2, yT + colMF * s2 * 0.55, X(xA) + 9, yT + colMF * s2 * 0.55 + 5, '2');
+    balao(X(xA) + reach * s2 * 0.55, yT + colMF * s2 * 0.45, X(xA) + reach * s2 * 0.55 + 7, yT + colMF * s2 * 0.45 + 7, '3');
+    balao(X(xB), yT - 2, X(xB) + 8, yT + 11, '4');
+    balao(x0 + hB / 2 + 0.5, yT + colL * s2 * 0.3, x0 - 6, yT + colL * s2 * 0.3 + 9, '5');
+    tx(170, 155, `Folga p/ platibanda: ${folga} mm • As luvas deslizam no mastro p/ regular o aperto`, 2.4);
+
+    // ============ PARTE DE BAIXO (toda EDITÁVEL) ============
+    rc(7, 160, 90, 43);
+    tx(10, 166, 'Obs:', 3.2, 'start', true);
+    edit(9.5, 168, 85.5, 34,
+        'Seguir ABNT NBR 17.152-2 — Redes de segurança contra quedas (requisitos de instalação).<br/>' +
+        'Chapas parafusadas na laje/platibanda c/ chumbadores Ø12.<br/>' +
+        `Ponta arredondada (R${rP * 10}) p/ não danificar a tela.<br/>` +
+        'Furo Ø14 no alto da ponta p/ cabo de aço entre suportes.<br/>' +
+        'Soldar todo o perímetro; galvanização a fogo após solda.', 2.5, false, 'left', true);
+
+    rc(97, 160, 70, 43);
+    tx(100, 166, 'Lista de material:', 3.2, 'start', true);
+    edit(99.5, 168, 65.5, 34,
+        `Tubo ${bit}×${bit}×${parede} mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
+        `Tubo ${luva}×${luva}×${parede} mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
+        'Chapa aço 150×60×6 mm — 3 pç<br/>' +
+        'Chumbadores/parafusos Ø12 — 6 pç<br/>' +
+        'Cabo de aço p/ interligar suportes — ver obra<br/>' +
+        `<b>Peso do aço ≈ ${ptot.toFixed(1)} kg</b><br/>` +
+        `<b>Galvanização ≈ ${formatBRL(custoGalv)} (${formatBRL(getPrecoGalv())}/kg)</b>`, 2.4, false, 'left', true);
+
+    rc(167, 160, 45, 43);
+    ln(167, 166, 212, 166, 0.25); ln(167, 172, 212, 172, 0.25); ln(167, 178, 212, 178, 0.25); ln(167, 184, 212, 184, 0.25);
+    ln(185, 160, 185, 184, 0.25); ln(199, 160, 199, 184, 0.25);
+    tx(192, 164.4, 'Nome', 2.4); tx(205.5, 164.4, 'Data', 2.4);
+    tx(169, 170.4, 'Desenho', 2.4, 'start');
+    tx(169, 176.4, 'Checado', 2.4, 'start');
+    tx(169, 182.4, 'Aprovado', 2.4, 'start');
+    edit(185.5, 166.3, 13, 5.4, 'Lenon', 2.4, false, 'center');
+    edit(199.5, 166.3, 12, 5.4, hoje, 2.2, false, 'center');
+    edit(185.5, 172.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 172.3, 12, 5.4, '', 2.2, false, 'center');
+    edit(185.5, 178.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 178.3, 12, 5.4, '', 2.2, false, 'center');
+    ln(167, 190.5, 212, 190.5, 0.25); ln(167, 196.5, 212, 196.5, 0.25);
+    edit(168.5, 184.5, 42, 5.6, `Escala: 1:${Math.round(1 / s)} / 1:${Math.round(1 / s2)}`, 2.5);
+    edit(168.5, 190.8, 42, 5.4, 'Unidade: mm', 2.5);
+    edit(168.5, 196.8, 42, 5.8, 'Ângulo: graus', 2.5);
+
+    rc(212, 160, 78, 43);
+    ln(212, 170, 290, 170, 0.35);
+    ln(212, 178, 290, 178, 0.35);
+    ln(212, 185, 290, 185, 0.35);
+    ln(212, 190, 290, 190, 0.35);
+    ln(212, 196, 290, 196, 0.35);
+    ln(254, 196, 254, 203, 0.35);
+    edit(213, 160.6, 76, 9, '', 6, true, 'center');
+    edit(213.5, 170.4, 76, 7.2, `Obra: Suporte de tela ${(Lme / 1000).toFixed(1).replace('.', ',')} m`, 3.1, true);
+    edit(213.5, 178.3, 76, 6.4, 'Desenho: Instalação rede fachada', 2.8, true);
+    edit(213.5, 185.2, 76, 4.6, 'Endereço obra:', 2.3);
+    edit(213.5, 190.3, 76, 5.4, 'Engenheiro: ______________  CREA: ______', 2.5);
+    edit(213.5, 196.4, 39.5, 6.2, 'CNO:', 2.5);
+    edit(255, 196.4, 34, 6.2, 'Prancha: 1/1', 2.7, true, 'center');
+
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" width="297mm" height="210mm">
+<defs><marker id="seta" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0.7 L5.5,3 L0,5.3 Z"/></marker></defs>
+<rect x="0" y="0" width="297" height="210" fill="#fff"/>${svg.join('\n')}</svg>`;
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Projeto Técnico — Suporte de Tela</title>
 <style>@page{size:A4 landscape;margin:0}body{margin:0;background:#7f8c8d}
 .folha{width:297mm;height:210mm;background:#fff;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.45)}
 .folha svg{display:block}
