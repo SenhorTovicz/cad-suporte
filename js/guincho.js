@@ -379,9 +379,11 @@
             + pesoChapaMotor;
         const pesoTotal = peso1Guincho * qtdGuinchos;
 
-        // ---- Galvanização (R$/kg) e custo total ----
+        // ---- Galvanização (R$/kg), mão de obra (R$/guincho) e custo total ----
         const custoGalv = pesoTotal * getPrecoGalv();
-        const custoTotal = custoMaterial + custoGalv;
+        const maoObraUnit = lerNumInput('maoObraG');
+        const custoMaoObra = maoObraUnit * qtdGuinchos;
+        const custoTotal = custoMaterial + custoGalv + custoMaoObra;
 
         document.getElementById('gTotalTubos').innerText = metrosTubos.toFixed(2) + ' m';
         document.getElementById('gTotalTubosQtd').innerText = totalTubos.toFixed(2) + ' m';
@@ -392,12 +394,14 @@
         document.getElementById('gTotalPeso').innerText = peso1Guincho.toFixed(2) + ' kg';
         document.getElementById('gTotalPesoQtd').innerText = pesoTotal.toFixed(2) + ' kg';
         document.getElementById('gTotalCustoGalv').innerText = formatBRL(custoGalv);
+        document.getElementById('gMaoObraUnit').innerText = formatBRL(maoObraUnit);
+        document.getElementById('gTotalMaoObra').innerText = formatBRL(custoMaoObra);
         document.getElementById('gTotalCusto').innerText = formatBRL(custoTotal);
     }
 
     const listaInputs = ['modoFixacao', 'alturaTorre', 'compPeL', 'alturaMF', 'compDiagG', 'compRosca', 'espLaje',
         'alturaMureta', 'espMureta', 'larguraCaixa', 'alturaCaixa', 'profCaixa',
-        'bitolaTorre', 'bitolaDiagG', 'qtdGuinchos'];
+        'bitolaTorre', 'bitolaDiagG', 'qtdGuinchos', 'maoObraG'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
     });

@@ -342,6 +342,10 @@
                 <label for="qtdGuinchos" style="margin: 0; flex: 1;">Qtd. de Guinchos:</label>
                 <input type="number" id="qtdGuinchos" value="1" min="1" style="width: 70px; padding: 4px;">
             </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                <label for="maoObraG" style="margin: 0; flex: 1;">Mão de obra (R$/guincho):</label>
+                <input type="number" id="maoObraG" value="100" step="1" min="0" style="width: 70px; padding: 4px;">
+            </div>
 
             <hr>
 
@@ -385,8 +389,13 @@
                         <td><span>-</span></td>
                         <td><b id="gTotalCustoGalv" style="color: #6a1b9a;">R$ 0,00</b></td>
                     </tr>
+                    <tr class="linha-peso">
+                        <td>Mão de obra</td>
+                        <td><span id="gMaoObraUnit">R$ 0,00</span></td>
+                        <td><b id="gTotalMaoObra" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
                     <tr class="linha-custo">
-                        <td>Custo Total</td>
+                        <td>Custo Total (mat. + galv. + m.o.)</td>
                         <td><span>-</span></td>
                         <td><b id="gTotalCusto" style="color: #d35400;">R$ 0,00</b></td>
                     </tr>
@@ -430,6 +439,7 @@
         initPrecoBarra(() => document.dispatchEvent(new Event('preco-changed')));
         initPrecoGalv(() => document.dispatchEvent(new Event('preco-changed')));
         initCampoPersistente('maoObra', 'cadSuporte.maoObraSuporte', 100);
+        initCampoPersistente('maoObraG', 'cadSuporte.maoObraGuincho', 100);
         initPainelToggle();
     </script>
     <script src="js/suporte.js"></script>
