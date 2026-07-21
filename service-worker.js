@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cad-suporte-v25';
+const CACHE_NAME = 'cad-suporte-v27';
 
 const ARQUIVOS_APP = [
     './',

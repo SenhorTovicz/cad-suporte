@@ -15,13 +15,15 @@ function exportarProjetoGuincho() {
     const rosca = Math.round(lerNumInput('compRosca') * 1000);
     const s = 0.1; // escala 1:10
 
-    // Pesos (aço 7,85 g/cm³; tubos c/ parede 3 mm)
-    const kgm = (b) => (b * b - (b - 6) * (b - 6)) * 0.00785;
+    // Pesos (aço 7,85 g/cm³; tubos c/ parede 2,65 mm)
+    const parede = 2.65;
+    const kgm = (b) => (b * b - Math.max(0, b - 2 * parede) * Math.max(0, b - 2 * parede)) * 0.00785;
     const m50 = (Lv + Lpe + 3 * base + 3 * Ldiag) / 1000;
     const m60 = hLuva / 1000;
     const p50 = m50 * kgm(bit);
     const p60 = m60 * kgm(ladoLuva);
     const ptot = p50 + p60 + 1.4; // + chapa 250x120x6
+    const custoGalv = ptot * getPrecoGalv();
 
     const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const r1 = (v) => Math.round(v * 100) / 100;
@@ -213,13 +215,14 @@ function exportarProjetoGuincho() {
     rc(97, 160, 70, 43);
     tx(100, 166, 'Lista de material:', 3.2, 'start', true);
     edit(99.5, 168, 65.5, 34,
-        `Tubo ${bit}×${bit}×3 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
-        `Tubo ${ladoLuva}×${ladoLuva}×3 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
+        `Tubo ${bit}×${bit}×2,65 mm — ${m50.toFixed(2)} m (${p50.toFixed(1)} kg)<br/>` +
+        `Tubo ${ladoLuva}×${ladoLuva}×2,65 mm — ${m60.toFixed(2)} m (${p60.toFixed(1)} kg)<br/>` +
         'Chapa aço 250×120×6 mm — 1 pç<br/>' +
         'Barra roscada c/ borracha — 3 pç<br/>' +
         'Pino Ø12 — 1 pç • Parafusos M10 — 2 pç<br/>' +
         'Motor guincho + fonte/bateria — 1 cj<br/>' +
-        `<b>Peso do aço ≈ ${ptot.toFixed(1)} kg (p/ galvanização)</b>`, 2.4, false, 'left', true);
+        `<b>Peso do aço ≈ ${ptot.toFixed(1)} kg</b><br/>` +
+        `<b>Galvanização ≈ ${formatBRL(custoGalv)} (${formatBRL(getPrecoGalv())}/kg)</b>`, 2.4, false, 'left', true);
 
     // ================= TABELA (nomes/escala) =================
     rc(167, 160, 45, 43);
