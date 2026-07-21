@@ -360,7 +360,28 @@
         const totalDiag = metrosDiag * qtdGuinchos;
         const totalGeral = metrosPorGuincho * qtdGuinchos;
         const totalBarras = Math.ceil(totalGeral / 6);
-        const custoTotal = totalBarras * getPrecoBarra();
+        const custoMaterial = totalBarras * getPrecoBarra();
+
+        // ---- Peso do aço (para galvanização, cobrada por kg) ----
+        // Tubo de perfil vazado: peso = comprimento(m) × área da seção(mm²) × 0,00785
+        // (aço a 7850 kg/m³). Parede de 2,65 mm (metalon comercial).
+        const parede = 2.65; // mm
+        function pesoTubo(compM, bitolaM) {
+            const b = bitolaM * 1000; // mm
+            const interno = Math.max(0, b - 2 * parede);
+            const areaMM2 = b * b - interno * interno;
+            return compM * areaMM2 * 0.00785; // kg
+        }
+        const pesoChapaMotor = 0.25 * 0.12 * 0.006 * 7850;   // chapa 250×120×6 ≈ 1,4 kg
+        const peso1Guincho = pesoTubo(metrosTubos, bitolaTorre)  // mastro + pé + bases (ou boom)
+            + pesoTubo(metrosDiag, bitolaDiagG)                  // diagonais das mãos francesas
+            + pesoTubo(alturaMF, ladoLuva)                       // luva 60×60
+            + pesoChapaMotor;
+        const pesoTotal = peso1Guincho * qtdGuinchos;
+
+        // ---- Galvanização (R$/kg) e custo total ----
+        const custoGalv = pesoTotal * getPrecoGalv();
+        const custoTotal = custoMaterial + custoGalv;
 
         document.getElementById('gTotalTubos').innerText = metrosTubos.toFixed(2) + ' m';
         document.getElementById('gTotalTubosQtd').innerText = totalTubos.toFixed(2) + ' m';
@@ -368,6 +389,9 @@
         document.getElementById('gTotalDiagQtd').innerText = totalDiag.toFixed(2) + ' m';
         document.getElementById('gTotalGeral').innerText = totalGeral.toFixed(2) + ' m';
         document.getElementById('gTotalBarras').innerText = totalBarras + ' barras (de 6m)';
+        document.getElementById('gTotalPeso').innerText = peso1Guincho.toFixed(2) + ' kg';
+        document.getElementById('gTotalPesoQtd').innerText = pesoTotal.toFixed(2) + ' kg';
+        document.getElementById('gTotalCustoGalv').innerText = formatBRL(custoGalv);
         document.getElementById('gTotalCusto').innerText = formatBRL(custoTotal);
     }
 
