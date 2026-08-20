@@ -27,6 +27,10 @@
             <input type="number" id="precoBarra" step="0.01" min="0">
             <label for="precoGalv">Galv. (R$/kg)</label>
             <input type="number" id="precoGalv" step="0.01" min="0" style="width: 60px;">
+            <label for="precoRedeS">Rede (R$/m²)</label>
+            <input type="number" id="precoRedeS" step="0.01" min="0" style="width: 60px;">
+            <label for="precoTapumeS">Tapume (R$/m²)</label>
+            <input type="number" id="precoTapumeS" step="0.01" min="0" style="width: 55px;">
         </div>
     </div>
 
@@ -457,16 +461,9 @@
                         <td>Ganchos por haste</td>
                         <td><input type="number" id="ganchosHasteS" value="6" min="2"></td>
                     </tr>
-                    <tr>
-                        <td>Rede de proteção (R$/m²)</td>
-                        <td><input type="number" id="precoRedeS" value="0.00" step="0.50" min="0"></td>
-                    </tr>
-                    <tr>
-                        <td>Tela tapume (R$/m²)</td>
-                        <td><input type="number" id="precoTapumeS" value="0.00" step="0.50" min="0"></td>
-                    </tr>
                 </tbody>
             </table>
+            <p style="font-size: 11px; color: #7f8c8d; margin: 6px 0 0;">Preços da rede e do tapume (R$/m²) ficam na barra de cima, junto com a barra e a galvanização.</p>
 
             <hr>
 
@@ -574,8 +571,12 @@
         initCampoPersistente('maoObra', 'cadSuporte.maoObraSuporte', 100);
         initCampoPersistente('maoObraG', 'cadSuporte.maoObraGuincho', 100);
         initCampoPersistente('maoObraS', 'cadSuporte.maoObraSacada', 100);
-        initCampoPersistente('precoRedeS', 'cadSuporte.precoRedeM2', 0);
-        initCampoPersistente('precoTapumeS', 'cadSuporte.precoTapumeM2', 0);
+        // Preço zerado salvo de versões antigas conta como "não definido" (usa o padrão novo)
+        ['cadSuporte.precoRedeM2', 'cadSuporte.precoTapumeM2'].forEach(k => {
+            if (parseFloat(localStorage.getItem(k)) === 0) localStorage.removeItem(k);
+        });
+        initCampoPersistente('precoRedeS', 'cadSuporte.precoRedeM2', 23.90);
+        initCampoPersistente('precoTapumeS', 'cadSuporte.precoTapumeM2', 3.17);
         initPainelToggle();
     </script>
     <script src="js/suporte.js"></script>
