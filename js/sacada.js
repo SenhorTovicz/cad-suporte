@@ -85,15 +85,14 @@
             dobr.position.set(sx, altura, afast);
             grupo.add(dobr);
 
-            // ---- Embaixo: sapata na parede + braço + BUCHA com furo p/ a haste ----
-            box(0.10, 0.10, 0.008, sx, 0.09, 0.004, materialAco);
-            box(bitola * 0.7, bitola * 0.7, afast, sx, 0.09, afast / 2, materialAco);
-            box(ladoBucha, 0.18, ladoBucha, sx, 0.09, afast, materialColar);
+            // ---- Embaixo: sapata RETA na parede com BUCHA horizontal — o pé em L
+            // da haste desliza pra dentro dela e trava com o pino removível ----
+            box(0.10, 0.12, 0.008, sx, 0.06, 0.004, materialAco);
+            box(ladoBucha, ladoBucha, 0.09, sx, 0.045, 0.053, materialColar);
 
-            // Pino removível atravessando a bucha (some quando a proteção abre)
-            const pino = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, ladoBucha + 0.08, 10), materialPino);
-            pino.rotation.z = Math.PI / 2;
-            pino.position.set(sx, 0.13, afast);
+            // Pino removível descendo pela bucha (some quando a proteção abre)
+            const pino = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, ladoBucha + 0.07, 10), materialPino);
+            pino.position.set(sx, 0.045 + 0.03, 0.053);
             pino.visible = abertura < 5;
             grupo.add(pino);
         }
@@ -106,10 +105,14 @@
         painelMovel.rotation.x = -THREE.MathUtils.degToRad(abertura);
         grupo.add(painelMovel);
 
+        const hasteLen = altura - 0.06;   // parte vertical; o pé em L completa embaixo
         for (const sx of [-dist / 2, dist / 2]) {
             // Haste vertical (tubo com regulagem: luva externa na metade de baixo)
-            box(bitola, altura, bitola, sx, -altura / 2, 0, materialAco, painelMovel);
-            box(bitola + 0.008, altura / 2, bitola + 0.008, sx, -altura * 0.75, 0, materialColar, painelMovel);
+            box(bitola, hasteLen, bitola, sx, -hasteLen / 2, 0, materialAco, painelMovel);
+            box(bitola + 0.008, hasteLen / 2, bitola + 0.008, sx, -hasteLen * 0.75, 0, materialColar, painelMovel);
+
+            // Pé em L na base: horizontal em direção à parede, encaixa na bucha da sapata
+            box(bitola, bitola, afast, sx, -hasteLen - bitola / 2, -afast / 2 + bitola / 2, materialAco, painelMovel);
 
             // Furos de regulagem de altura (metade de cima da haste)
             const nFuros = 6;
@@ -120,6 +123,13 @@
                 furo.position.set(sx, fy, bitola / 2 + 0.002);
                 painelMovel.add(furo);
             }
+
+            // Pino da regulagem de altura: atravessa a luva e a haste no furo escolhido,
+            // igual ao pino da parte de baixo (trava a altura da proteção)
+            const pinoReg = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, bitola + 0.07, 10), materialPino);
+            pinoReg.rotation.x = Math.PI / 2;
+            pinoReg.position.set(sx, -hasteLen / 2 + 0.02, 0);
+            painelMovel.add(pinoReg);
 
             // Ganchos da rede (lado de dentro da haste, voltados pro vão)
             for (let i = 0; i < nGanchos; i++) {
@@ -148,7 +158,7 @@
         }
 
         // ---- Cálculo de material ----
-        const metrosTubo = 2 * altura + 2 * 0.18;          // 2 hastes + 2 buchas
+        const metrosTubo = 2 * (altura + afast) + 2 * 0.09;   // 2 hastes em L + 2 buchas
         const totalMetros = metrosTubo * qtd;
         const totalBarras = Math.ceil(totalMetros / 6);
         const custoMaterial = totalBarras * getPrecoBarra();
@@ -161,7 +171,7 @@
             return compM * (b * b - interno * interno) * 0.00785;
         }
         const pesoChapas = 4 * (0.10 * 0.10 * 0.003 * 7850);   // 4 sapatas 100×100×3
-        const peso1 = pesoTubo(2 * altura, bitola) + pesoTubo(2 * 0.18, ladoBucha) + pesoChapas + 0.3; // +dobradiças
+        const peso1 = pesoTubo(2 * (altura + afast), bitola) + pesoTubo(2 * 0.09, ladoBucha) + pesoChapas + 0.3; // +dobradiças
         const pesoTotal = peso1 * qtd;
         const custoGalv = pesoTotal * getPrecoGalv();
 
