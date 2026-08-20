@@ -105,30 +105,50 @@
         painelMovel.rotation.x = -THREE.MathUtils.degToRad(abertura);
         grupo.add(painelMovel);
 
-        const hasteLen = altura - 0.06;   // parte vertical; o pé em L completa embaixo
+        // Haste TELESCÓPICA: a base (tubo de baixo, 1,5 m) é o tubo mais grosso;
+        // a parte de cima é um tubo mais fino que ENTRA por dentro da base.
+        // Furos nas duas partes: alinha o furo e trava com o pino.
+        const hasteLen = altura - 0.06;                              // total vertical; o pé em L completa
+        const baseLen = Math.min(lerNumInput('compBaseS'), hasteLen - 0.2);
+        const bitInt = bitola - 0.008;                               // tubo de cima (interno)
+        const topoBase = -hasteLen + baseLen;                        // topo do tubo de baixo (local)
+        const internoLen = (hasteLen - baseLen) + Math.min(0.40, baseLen * 0.5); // sobra + trecho dentro da base
+
         for (const sx of [-dist / 2, dist / 2]) {
-            // Haste vertical (tubo com regulagem: luva externa na metade de baixo)
-            box(bitola, hasteLen, bitola, sx, -hasteLen / 2, 0, materialAco, painelMovel);
-            box(bitola + 0.008, hasteLen / 2, bitola + 0.008, sx, -hasteLen * 0.75, 0, materialColar, painelMovel);
+            // Tubo de BAIXO (base 1,5 m, mais grosso), do pé em L até o topo da base
+            box(bitola, baseLen, bitola, sx, -hasteLen + baseLen / 2, 0, materialAco, painelMovel);
+
+            // Tubo de CIMA (mais fino), da dobradiça descendo pra dentro da base
+            box(bitInt, internoLen, bitInt, sx, -internoLen / 2, 0, materialAco, painelMovel);
 
             // Pé em L na base: horizontal em direção à parede, encaixa na bucha da sapata
             box(bitola, bitola, afast, sx, -hasteLen - bitola / 2, -afast / 2 + bitola / 2, materialAco, painelMovel);
 
-            // Furos de regulagem de altura (metade de cima da haste)
-            const nFuros = 6;
-            for (let i = 0; i < nFuros; i++) {
-                const fy = -0.10 - i * (altura * 0.40 / (nFuros - 1));
+            // Furos de regulagem no tubo de CIMA (trecho exposto acima da base)
+            const nFurosTopo = 6;
+            const trechoExposto = Math.max(hasteLen - baseLen - 0.10, 0.05);
+            for (let i = 0; i < nFurosTopo; i++) {
+                const fy = -0.06 - i * (trechoExposto / (nFurosTopo - 1));
+                const furo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.012, 10), materialFuro);
+                furo.rotation.x = Math.PI / 2;
+                furo.position.set(sx, fy, bitInt / 2 + 0.002);
+                painelMovel.add(furo);
+            }
+
+            // Furos de regulagem no tubo de BAIXO (perto do topo da base)
+            for (let i = 0; i < 3; i++) {
+                const fy = topoBase - 0.05 - i * 0.10;
                 const furo = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.012, 10), materialFuro);
                 furo.rotation.x = Math.PI / 2;
                 furo.position.set(sx, fy, bitola / 2 + 0.002);
                 painelMovel.add(furo);
             }
 
-            // Pino da regulagem de altura: atravessa a luva e a haste no furo escolhido,
+            // Pino da regulagem: atravessa o tubo de baixo E o de cima no furo alinhado,
             // igual ao pino da parte de baixo (trava a altura da proteção)
             const pinoReg = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, bitola + 0.07, 10), materialPino);
             pinoReg.rotation.x = Math.PI / 2;
-            pinoReg.position.set(sx, -hasteLen / 2 + 0.02, 0);
+            pinoReg.position.set(sx, topoBase - 0.05, 0);
             painelMovel.add(pinoReg);
 
             // Ganchos da rede (lado de dentro da haste, voltados pro vão)
@@ -158,7 +178,8 @@
         }
 
         // ---- Cálculo de material ----
-        const metrosTubo = 2 * (altura + afast) + 2 * 0.09;   // 2 hastes em L + 2 buchas
+        // Por haste: base 1,5 m + tubo interno (sobra + trecho dentro) + pé em L; + buchas
+        const metrosTubo = 2 * (baseLen + internoLen + afast) + 2 * 0.09;
         const totalMetros = metrosTubo * qtd;
         const totalBarras = Math.ceil(totalMetros / 6);
         const custoMaterial = totalBarras * getPrecoBarra();
@@ -171,7 +192,9 @@
             return compM * (b * b - interno * interno) * 0.00785;
         }
         const pesoChapas = 4 * (0.10 * 0.10 * 0.003 * 7850);   // 4 sapatas 100×100×3
-        const peso1 = pesoTubo(2 * (altura + afast), bitola) + pesoTubo(2 * 0.09, ladoBucha) + pesoChapas + 0.3; // +dobradiças
+        const peso1 = pesoTubo(2 * (baseLen + afast), bitola)      // tubo de baixo + pé em L
+            + pesoTubo(2 * internoLen, bitInt)                     // tubo de cima (mais fino)
+            + pesoTubo(2 * 0.09, ladoBucha) + pesoChapas + 0.3;    // buchas, sapatas e dobradiças
         const pesoTotal = peso1 * qtd;
         const custoGalv = pesoTotal * getPrecoGalv();
 
@@ -200,7 +223,7 @@
         document.getElementById('sTotalCusto').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['alturaHasteS', 'distHastesS', 'afastParedeS', 'bitolaHasteS', 'ganchosHasteS',
+    const listaInputs = ['alturaHasteS', 'compBaseS', 'distHastesS', 'afastParedeS', 'bitolaHasteS', 'ganchosHasteS',
         'aberturaS', 'precoRedeS', 'precoTapumeS', 'qtdSacadas', 'maoObraS'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
