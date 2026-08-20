@@ -109,7 +109,7 @@
         // a parte de cima é um tubo mais fino que ENTRA por dentro da base.
         // Furos nas duas partes: alinha o furo e trava com o pino.
         const hasteLen = altura - 0.06;                              // total vertical; o pé em L completa
-        const baseLen = Math.min(lerNumInput('compBaseS'), hasteLen - 0.2);
+        const baseLen = Math.min(1.5, hasteLen - 0.2);               // tubo de baixo FIXO de 1,5 m
         const bitInt = bitola - 0.008;                               // tubo de cima (interno)
         const topoBase = -hasteLen + baseLen;                        // topo do tubo de baixo (local)
         const internoLen = (hasteLen - baseLen) + Math.min(0.40, baseLen * 0.5); // sobra + trecho dentro da base
@@ -223,7 +223,7 @@
         document.getElementById('sTotalCusto').innerText = formatBRL(custoTotal);
     }
 
-    const listaInputs = ['alturaHasteS', 'compBaseS', 'distHastesS', 'afastParedeS', 'bitolaHasteS', 'ganchosHasteS',
+    const listaInputs = ['alturaHasteS', 'distHastesS', 'afastParedeS', 'bitolaHasteS', 'ganchosHasteS',
         'aberturaS', 'precoRedeS', 'precoTapumeS', 'qtdSacadas', 'maoObraS'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);

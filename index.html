@@ -438,8 +438,8 @@
             <table class="tabela-parametros">
                 <tbody>
                     <tr>
-                        <td>Base da haste — tubo de baixo (m)</td>
-                        <td><input type="number" id="compBaseS" value="1.50" step="0.05"></td>
+                        <td>Base da haste — tubo de baixo</td>
+                        <td style="color: #2c3e50; font-weight: bold;">1,50 m (fixo)</td>
                     </tr>
                     <tr>
                         <td>Distância entre hastes (m)</td>
@@ -536,6 +536,7 @@
             </table>
 
             <button class="btn-salvar" onclick="salvarOrcamentoAtual('sacada')">💾 Salvar Orçamento</button>
+            <button class="btn-salvar btn-projeto" onclick="exportarProjetoSacada()">📐 Projeto Técnico (PDF)</button>
         </div>
         <div id="canvas-sacada" class="canvas-container"></div>
     </div>
