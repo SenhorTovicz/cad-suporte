@@ -103,14 +103,16 @@ function salvarListaOrcamentos(lista) {
 const TIPO_LABELS = {
     suporte: 'Suporte de Tela',
     grade: 'Grade de Poço',
-    guincho: 'Guincho'
+    guincho: 'Guincho',
+    sacada: 'Proteção de Sacada'
 };
 
 function getApp(tipo) {
     return {
         suporte: window.SuporteApp,
         grade: window.GradeApp,
-        guincho: window.GuinchoApp
+        guincho: window.GuinchoApp,
+        sacada: window.SacadaApp
     }[tipo];
 }
 

@@ -19,6 +19,7 @@
         <button class="tab-btn active" data-tab="suporte">Suporte de Tela</button>
         <button class="tab-btn" data-tab="grade">Grade de Poço</button>
         <button class="tab-btn" data-tab="guincho">Guincho</button>
+        <button class="tab-btn" data-tab="sacada">Sacada</button>
         <button class="tab-btn" data-tab="historico">Histórico</button>
         <button id="painel-toggle-btn" data-painel-toggle="painel-suporte">☰ Medidas</button>
         <div id="precoGlobal">
@@ -408,6 +409,133 @@
         <div id="canvas-guincho" class="canvas-container"></div>
     </div>
 
+    <!-- Proteção de Sacada -->
+    <div id="view-sacada" class="view">
+        <div id="painel-sacada" class="painel">
+            <h3>Proteção de Sacada (removível)</h3>
+
+            <button id="btnAbrirSacada" class="btn-salvar" style="background: #0288d1;">⬆ Abrir proteção</button>
+
+            <div style="margin: 12px 0;">
+                <label>Abertura (basculante)</label>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #3498db; font-weight: bold;">
+                    <span>Ângulo:</span>
+                    <span id="lblAberturaS">0°</span>
+                </div>
+                <input type="range" id="aberturaS" min="0" max="90" value="0" step="1">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>Regulagem de altura das hastes</label>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #3498db; font-weight: bold;">
+                    <span>Altura:</span>
+                    <span id="lblAlturaS">2.40 m</span>
+                </div>
+                <input type="range" id="alturaHasteS" min="2.0" max="2.8" value="2.4" step="0.05">
+            </div>
+
+            <h3>Medidas</h3>
+            <table class="tabela-parametros">
+                <tbody>
+                    <tr>
+                        <td>Distância entre hastes (m)</td>
+                        <td><input type="number" id="distHastesS" value="2.00" step="0.05"></td>
+                    </tr>
+                    <tr>
+                        <td>Afastamento da parede (m)</td>
+                        <td><input type="number" id="afastParedeS" value="0.10" step="0.01"></td>
+                    </tr>
+                    <tr>
+                        <td>Bitola das hastes (mm)</td>
+                        <td><input type="number" id="bitolaHasteS" value="30"></td>
+                    </tr>
+                    <tr>
+                        <td>Ganchos por haste</td>
+                        <td><input type="number" id="ganchosHasteS" value="6" min="2"></td>
+                    </tr>
+                    <tr>
+                        <td>Rede de proteção (R$/m²)</td>
+                        <td><input type="number" id="precoRedeS" value="0.00" step="0.50" min="0"></td>
+                    </tr>
+                    <tr>
+                        <td>Tela tapume (R$/m²)</td>
+                        <td><input type="number" id="precoTapumeS" value="0.00" step="0.50" min="0"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <hr>
+
+            <h3>Quantidade</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="qtdSacadas" style="margin: 0; flex: 1;">Qtd. de Proteções:</label>
+                <input type="number" id="qtdSacadas" value="1" min="1" style="width: 70px; padding: 4px;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                <label for="maoObraS" style="margin: 0; flex: 1;">Mão de obra (R$/proteção):</label>
+                <input type="number" id="maoObraS" value="100" step="1" min="0" style="width: 70px; padding: 4px;">
+            </div>
+
+            <hr>
+
+            <h3>Consumo e Custo Estimado</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Por Proteção</th>
+                        <th>Total Pedido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tubos (2 hastes + buchas)</td>
+                        <td><span id="sTotalTubos">0.00 m</span></td>
+                        <td><b id="sTotalTubosQtd">0.00 m</b></td>
+                    </tr>
+                    <tr class="linha-barras">
+                        <td>Barras de Ferro (6m)</td>
+                        <td><span>-</span></td>
+                        <td><b id="sTotalBarras" style="color: #2e7d32;">0.00 barras</b></td>
+                    </tr>
+                    <tr class="linha-peso">
+                        <td>Peso do aço</td>
+                        <td><span id="sTotalPeso">0.00 kg</span></td>
+                        <td><b id="sTotalPesoQtd" style="color: #6a1b9a;">0.00 kg</b></td>
+                    </tr>
+                    <tr class="linha-peso">
+                        <td>Galvanização (R$/kg)</td>
+                        <td><span>-</span></td>
+                        <td><b id="sTotalCustoGalv" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
+                    <tr>
+                        <td>Rede de proteção</td>
+                        <td><span id="sAreaRede">0.00 m²</span></td>
+                        <td><b id="sCustoRede" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
+                    <tr>
+                        <td>Tela tapume</td>
+                        <td><span id="sAreaTapume">0.00 m²</span></td>
+                        <td><b id="sCustoTapume" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
+                    <tr class="linha-peso">
+                        <td>Mão de obra</td>
+                        <td><span id="sMaoObraUnit">R$ 0,00</span></td>
+                        <td><b id="sTotalMaoObra" style="color: #6a1b9a;">R$ 0,00</b></td>
+                    </tr>
+                    <tr class="linha-custo">
+                        <td>Custo Total</td>
+                        <td><span>-</span></td>
+                        <td><b id="sTotalCusto" style="color: #d35400;">R$ 0,00</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn-salvar" onclick="salvarOrcamentoAtual('sacada')">💾 Salvar Orçamento</button>
+        </div>
+        <div id="canvas-sacada" class="canvas-container"></div>
+    </div>
+
     <!-- Histórico de Orçamentos -->
     <div id="view-historico" class="view">
         <div class="historico-wrap">
@@ -440,20 +568,24 @@
         initPrecoGalv(() => document.dispatchEvent(new Event('preco-changed')));
         initCampoPersistente('maoObra', 'cadSuporte.maoObraSuporte', 100);
         initCampoPersistente('maoObraG', 'cadSuporte.maoObraGuincho', 100);
+        initCampoPersistente('maoObraS', 'cadSuporte.maoObraSacada', 100);
+        initCampoPersistente('precoRedeS', 'cadSuporte.precoRedeM2', 0);
+        initCampoPersistente('precoTapumeS', 'cadSuporte.precoTapumeM2', 0);
         initPainelToggle();
     </script>
     <script src="js/suporte.js"></script>
     <script src="js/grade.js"></script>
     <script src="js/guincho.js"></script>
+    <script src="js/sacada.js"></script>
     <script src="js/projeto.js"></script>
     <script>
         const toggleBtn = document.getElementById('painel-toggle-btn');
-        const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho' };
+        const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho', sacada: 'painel-sacada' };
         initTabs((aba) => {
             if (APPS[aba]) {
                 toggleBtn.dataset.painelToggle = APPS[aba];
                 toggleBtn.style.display = '';
-                const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp }[aba];
+                const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp, sacada: window.SacadaApp }[aba];
                 requestAnimationFrame(() => { if (app && app.resize) app.resize(); });
             } else {
                 toggleBtn.style.display = 'none';
