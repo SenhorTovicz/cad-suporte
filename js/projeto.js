@@ -560,6 +560,8 @@ function exportarProjetoSacada() {
     const custoGalv = ptot * getPrecoGalv();
     const areaRede = (dist / 1000) * (alt / 1000);
     const areaTap = areaRede / 2;
+    const custoRede = areaRede * lerNumInput('precoRedeS');
+    const custoTap = areaTap * lerNumInput('precoTapumeS');
 
     const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
     const r1 = (v) => Math.round(v * 100) / 100;
@@ -726,7 +728,7 @@ function exportarProjetoSacada() {
         `Tubo ${bitInt}×${bitInt}×${parede} mm — ${mInt.toFixed(2)} m (${pInt.toFixed(1)} kg)<br/>` +
         `Bucha ${bucha}×${bucha} — 2× 90 mm • Chapas — 4 pç<br/>` +
         `Dobradiças — 2 pç • Pinos Ø8 — 4 pç<br/>` +
-        `Rede de proteção — ${areaRede.toFixed(1)} m² • Tela tapume — ${areaTap.toFixed(1)} m²<br/>` +
+        `Rede — ${areaRede.toFixed(1)} m² (${formatBRL(custoRede)}) • Tapume — ${areaTap.toFixed(1)} m² (${formatBRL(custoTap)})<br/>` +
         `<b>Peso do aço ≈ ${ptot.toFixed(1)} kg</b><br/>` +
         `<b>Galvanização ≈ ${formatBRL(custoGalv)} (${formatBRL(getPrecoGalv())}/kg)</b>`, 2.4, false, 'left', true);
 
