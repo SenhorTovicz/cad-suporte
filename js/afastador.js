@@ -153,10 +153,10 @@
         }
         cilindro(rVerg, 2 * (zPerna - rCurva), xFimU, yCar, 0, 'z', materialVergalhao, 10);
 
-        // ============ GANCHOS Ø8 (2x): soldados nas laterais da haste, apoiam no caranguejo ============
+        // ============ GANCHOS Ø6 (2x): soldados nas laterais da haste, apoiam no caranguejo ============
         // Saem da lateral da haste, sobem por dentro da perna do caranguejo, passam
         // por cima dela e descem um pouco do lado de fora — só apoiam, não travam.
-        const rF = 0.004;
+        const rF = 0.003;
         const xG = L * 0.55;
         const zIn = zPerna - rVerg - rF - 0.001;
         const zOut = zPerna + rVerg + rF + 0.001;
