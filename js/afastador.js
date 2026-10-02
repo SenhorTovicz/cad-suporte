@@ -5,7 +5,7 @@
     scene.background = new THREE.Color(0xf1f2f6);
 
     const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.01, 100);
-    camera.position.set(0.20, 0.22, 0.42);
+    camera.position.set(0.20, 0.42, 0.85);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -13,7 +13,7 @@
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0.05, 0, 0);
+    controls.target.set(-0.24, 0.0, 0);
 
     const light1 = new THREE.DirectionalLight(0xffffff, 1.2);
     light1.position.set(3, 6, 5);
@@ -21,7 +21,7 @@
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
     const grid = new THREE.GridHelper(2, 40, 0x7f8c8d, 0xbdc3c7);
-    grid.position.y = -0.30;
+    grid.position.y = -0.46;
     scene.add(grid);
 
     const materialAco = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.8 });
@@ -31,6 +31,7 @@
     const materialFuro = new THREE.MeshStandardMaterial({ color: 0xa8b0b6, roughness: 0.55, metalness: 0.4 });
     const materialConcreto = new THREE.MeshLambertMaterial({ color: 0xb8bfc4 });
     const materialSLQA = new THREE.MeshStandardMaterial({ color: 0x2e86c1, roughness: 0.5, metalness: 0.5, transparent: true, opacity: 0.55 });
+    const materialCaranguejo = new THREE.MeshStandardMaterial({ color: 0xd35400, roughness: 0.5, metalness: 0.6 });
 
     const grupo = new THREE.Group();
     scene.add(grupo);
@@ -88,8 +89,9 @@
         document.getElementById('lblAvancoA').innerText = (avanco * 1000).toFixed(0) + ' mm';
         document.getElementById('lblAfastA').innerText = (afastTotal * 1000).toFixed(0) + ' mm';
 
-        // ============ LAJE / PRÉDIO (onde a chapa redonda apoia) ============
-        box(0.20, 0.50, 0.40, xLaje - 0.10, -0.05, 0, materialConcreto);
+        // ============ LAJE (só demonstração): a chapa redonda apoia na borda dela ============
+        const yTopoLaje = 0.12, espLajeD = 0.20, profLaje = 0.70;
+        box(profLaje, espLajeD, 0.50, xLaje - profLaje / 2, yTopoLaje - espLajeD / 2, 0, materialConcreto);
 
         // ============ PEÇA 1 — HASTE 20×20 OCA (x de 0 até L) ============
         // Desenhada como tubo: 4 paredes, pra se ver que é oca e o parafuso entra nela
@@ -126,9 +128,33 @@
         cilindro(0.0095, 0.007, xFuro, 0, compTrava / 2 - 0.004, 'z', materialPorca, 6);   // porca
         cilindro(0.0095, 0.006, xFuro, 0, -compTrava / 2 + 0.003, 'z', materialPorca, 6);  // cabeça
 
-        // ============ SUPORTE SLQA (referência) encaixado no U ============
+        // ============ SUPORTE SLQA em L (só demonstração) ============
+        // Braço deitado em cima da laje, preso pelos caranguejos; a parte vertical
+        // desce por fora da borda e passa dentro do U do afastador.
         const ladoSLQA = Math.min(0.05, abertU - 0.004, xFuro - 0.0055 - (xU0 + esp) - 0.002);
-        box(ladoSLQA, 0.55, ladoSLQA, xU0 + esp + ladoSLQA / 2, 0.0, 0, materialSLQA);
+        const xS = xU0 + esp + ladoSLQA / 2;
+        const yBraco = yTopoLaje + ladoSLQA / 2;
+        const yBaixo = -0.45;
+        const yTopoS = yBraco + ladoSLQA / 2;
+        box(ladoSLQA, yTopoS - yBaixo, ladoSLQA, xS, (yTopoS + yBaixo) / 2, 0, materialSLQA);
+        const xFimBraco = xLaje - 0.55;
+        const compBraco = (xS - ladoSLQA / 2) - xFimBraco;
+        box(compBraco, ladoSLQA, ladoSLQA, xFimBraco + compBraco / 2, yBraco, 0, materialSLQA);
+
+        // ============ CARANGUEJOS (só demonstração): abraçam o braço e são chumbados na laje ============
+        const eC = 0.006, larC = 0.05, folgaC = 0.002;
+        const meia = ladoSLQA / 2 + folgaC;
+        const hLat = ladoSLQA + folgaC;
+        for (const xC of [xLaje - 0.15, xLaje - 0.42]) {
+            box(larC, eC, 2 * (meia + eC), xC, yTopoLaje + hLat + eC / 2, 0, materialCaranguejo);           // tampa por cima
+            for (const sz of [-1, 1]) {
+                box(larC, hLat + eC, eC, xC, yTopoLaje + (hLat + eC) / 2, sz * (meia + eC / 2), materialCaranguejo); // lateral
+                const zAba = sz * (meia + eC + 0.025);
+                box(larC, eC, 0.05, xC, yTopoLaje + eC / 2, zAba, materialCaranguejo);                         // aba na laje
+                cilindro(0.005, 0.07, xC, yTopoLaje - 0.025, zAba, 'y', materialRosca, 12);                     // chumbador
+                cilindro(0.009, 0.007, xC, yTopoLaje + eC + 0.0035, zAba, 'y', materialPorca, 6);              // porca
+            }
+        }
 
         // ---- Cálculo de material ----
         function pesoTubo(compM, ladoM) {
