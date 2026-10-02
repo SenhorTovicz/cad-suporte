@@ -137,7 +137,7 @@
         // abraça o suporte SLQA, que passa por dentro do U.
         const rVerg = 0.00625;                                   // vergalhão 12,5 mm
         const rCurva = 0.016;
-        const yCar = 0.12;
+        const yCar = lerNumInput('alturaGanchoA') / 1000;   // altura do caranguejo acima do afastador
         const xS = xU0 + esp + ladoSLQA / 2;
         const zPerna = ladoSLQA / 2 + 0.012;
         const xFimU = xS + ladoSLQA / 2 + 0.012;
@@ -153,6 +153,30 @@
         }
         cilindro(rVerg, 2 * (zPerna - rCurva), xFimU, yCar, 0, 'z', materialVergalhao, 10);
 
+        // ============ GANCHOS Ø8 (2x): soldados nas laterais da haste, apoiam no caranguejo ============
+        // Saem da lateral da haste, sobem por dentro da perna do caranguejo, passam
+        // por cima dela e descem um pouco do lado de fora — só apoiam, não travam.
+        const rF = 0.004;
+        const xG = L * 0.55;
+        const zIn = zPerna - rVerg - rF - 0.001;
+        const zOut = zPerna + rVerg + rF + 0.001;
+        const yTopoG = yCar + rVerg + rF + 0.001;
+        const compStub = zIn - lado / 2;
+        const compLabio = yTopoG - yCar;
+        for (const sz of [-1, 1]) {
+            cilindro(rF, compStub, xG, 0, sz * (lado / 2 + compStub / 2), 'z', materialAco, 10);   // sai da lateral
+            cilindro(rF, yTopoG, xG, yTopoG / 2, sz * zIn, 'y', materialAco, 10);                  // sobe
+            cilindro(rF, zOut - zIn, xG, yTopoG, sz * (zIn + zOut) / 2, 'z', materialAco, 10);      // passa por cima
+            cilindro(rF, compLabio, xG, yTopoG - compLabio / 2, sz * zOut, 'y', materialAco, 10);   // desce do lado de fora
+            for (const [cy, cz] of [[0, zIn], [yTopoG, zIn], [yTopoG, zOut]]) {
+                const junta = new THREE.Mesh(new THREE.SphereGeometry(rF, 10, 8), materialAco);
+                junta.position.set(xG, cy, sz * cz);
+                grupo.add(junta);
+            }
+        }
+        const compGancho = compStub + yTopoG + (zOut - zIn) + compLabio;   // por gancho (m)
+        const pesoGanchos = 2 * compGancho * Math.PI * rF * rF * 7850;
+
         // ---- Cálculo de material ----
         function pesoTubo(compM, ladoM) {
             const b = ladoM * 1000;
@@ -163,13 +187,13 @@
         const pesoU = desenvU * altU * esp * 7850;
         const pesoDisco = Math.PI * (dDisco / 2) ** 2 * espDisco * 7850;
         const pesoHaste = pesoTubo(L, lado);
-        const peso1 = pesoHaste + pesoU + pesoDisco + 0.02;               // + porca soldada
+        const peso1 = pesoHaste + pesoU + pesoDisco + pesoGanchos + 0.02;   // + porca soldada
         const pesoTotal = peso1 * qtd;
 
         const metros = L * qtd;
         const barras = Math.ceil(metros / 6);
         const custoTubo = barras * lerNumInput('precoBarra20A');
-        const custoChapa = (pesoU + pesoDisco) * qtd * lerNumInput('precoChapaKgA');
+        const custoChapa = (pesoU + pesoDisco + pesoGanchos) * qtd * lerNumInput('precoChapaKgA');
         const custoParaf = lerNumInput('parafusariaA') * qtd;
         const custoGalv = pesoTotal * getPrecoGalv();
         const maoObraUnit = lerNumInput('maoObraA');
@@ -192,7 +216,7 @@
     }
 
     const listaInputs = ['compHasteA', 'ladoHasteA', 'paredeHasteA', 'aberturaUA', 'pernaUA', 'alturaUA',
-        'espChapaA', 'diamDiscoA', 'compParafusoA', 'avancoA', 'precoBarra20A', 'precoChapaKgA',
+        'espChapaA', 'diamDiscoA', 'compParafusoA', 'alturaGanchoA', 'avancoA', 'precoBarra20A', 'precoChapaKgA',
         'parafusariaA', 'qtdAfast', 'maoObraA'];
     listaInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', atualizarModelo);
