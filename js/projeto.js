@@ -816,9 +816,9 @@ function exportarProjetoAfastador() {
     const pHaste = (L / 1000) * kgm(lado);
     const pU = ((2 * peU + abU + 2 * esp) / 1000) * (alU / 1000) * (esp / 1000) * 7850;
     const pD = Math.PI * (dD / 2000) ** 2 * (eD / 1000) * 7850;
-    // Ganchos Ø8 (2x): mesma geometria do modelo 3D
+    // Ganchos Ø6 (2x): mesma geometria do modelo 3D
     const aG = Math.round(lerNumInput('alturaGanchoA'));             // eixo do afastador → caranguejo
-    const rV = 6.25, rF = 4;
+    const rV = 6.25, rF = 3;
     const ladoS = Math.max(10, Math.min(50, abU - 4, peU - 12 - 5.5 - esp - 2));
     const zPerna = ladoS / 2 + 12;
     const zIn = zPerna - rV - rF - 1, zOut = zPerna + rV + rF + 1;
@@ -978,9 +978,9 @@ function exportarProjetoAfastador() {
     ln(xU + (esp + ladoS + 12) * c, cy - zPerna * c, xU + (esp + ladoS + 12) * c, cy + zPerna * c, 0.2, true);
     balao(xG, cy - zOut * c, xG + 9, cy - 19, '5');
     tx(xLaje + 22, cy - zPerna * c - 1.5, 'caranguejo (vergalhão)', 2.1, 'start');
-    tx(115, 154.5, '1 = Haste • 2 = Chapa U • 3 = Parafuso 1/2" + chapa Ø50 • 4 = Trava 3/8" + porca • 5 = Gancho Ø8', 2.3);
+    tx(115, 154.5, '1 = Haste • 2 = Chapa U • 3 = Parafuso 1/2" + chapa Ø50 • 4 = Trava 3/8" + porca • 5 = Gancho Ø6', 2.3);
 
-    // ============ PEÇA 5 — GANCHO Ø8 (vista de topo da haste, esc 1:3) ============
+    // ============ PEÇA 5 — GANCHO Ø6 (vista de topo da haste, esc 1:3) ============
     const gS = 1 / 3, gx0 = 265, gy0 = 146;
     const GX = (z) => gx0 + z * gS, GY = (y) => gy0 - y * gS;
     rc(GX(-lado / 2), GY(lado / 2), lado * gS, lado * gS, 0.45);      // seção da haste
@@ -992,8 +992,8 @@ function exportarProjetoAfastador() {
     dimV(GY(0), GY(aG), GX(zOut) + 5, aG, GX(zOut));
     dimH(GX(-zOut), GX(zOut), GY(yTopoG) - 3.5, Math.round(2 * zOut), GY(yTopoG));
     tx(GX(0), GY(aG) + 1, 'caranguejo', 2.0);
-    tx(gx0, gy0 + 8, 'PEÇA 5 — GANCHO Ø8 (2x)', 2.7, 'middle', true);
-    tx(gx0, gy0 + 11.5, `ferro redondo Ø8 × ${compG} — só apoio`, 2.3);
+    tx(gx0, gy0 + 8, 'PEÇA 5 — GANCHO Ø6 (2x)', 2.7, 'middle', true);
+    tx(gx0, gy0 + 11.5, `ferro redondo Ø6 × ${compG} — só apoio`, 2.3);
 
     // ============ PARTE DE BAIXO (toda EDITÁVEL) ============
     rc(7, 160, 90, 43);
@@ -1003,7 +1003,7 @@ function exportarProjetoAfastador() {
         `Regulagem: girar o parafuso 1/2" — afastamento de ${afMin} a ${afMax} mm.<br/>` +
         'A chapa redonda Ø50 apoia na face da laje/viga, sem furar.<br/>' +
         'Porca 1/2" soldada em todo o contorno na ponta da haste.<br/>' +
-        '2 ganchos Ø8 soldados nas laterais da haste apoiam em cima do caranguejo (só apoio).<br/>' +
+        '2 ganchos Ø6 soldados nas laterais da haste apoiam em cima do caranguejo (só apoio).<br/>' +
         'Galvanização a fogo após solda e furação.', 2.5, false, 'left', true);
 
     rc(97, 160, 70, 43);
@@ -1012,7 +1012,7 @@ function exportarProjetoAfastador() {
         `Tubo ${lado}×${lado}×${String(parede).replace('.', ',')} — ${L} mm (${pHaste.toFixed(2)} kg)<br/>` +
         `Chapa U ${abU}×${peU}×${alU} × ${espTxt} mm (${pU.toFixed(2)} kg)<br/>` +
         `Chapa redonda Ø${dD} × 4,75 mm (${pD.toFixed(2)} kg)<br/>` +
-        `Ganchos ferro Ø8 — 2× ${compG} mm (${pG.toFixed(2)} kg)<br/>` +
+        `Ganchos ferro Ø6 — 2× ${compG} mm (${pG.toFixed(2)} kg)<br/>` +
         `Parafuso 1/2" × ${Lp} + porca 1/2" • Paraf. 3/8" + porca<br/>` +
         `<b>Peso do aço ≈ ${p1.toFixed(2)} kg/pç • ${qtd} pç = ${(p1 * qtd).toFixed(1)} kg</b><br/>` +
         `<b>Galvanização ≈ ${formatBRL(custoGalv)} (${formatBRL(getPrecoGalv())}/kg)</b>`, 2.4, false, 'left', true);
