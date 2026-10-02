@@ -104,7 +104,8 @@ const TIPO_LABELS = {
     suporte: 'Suporte de Tela',
     grade: 'Grade de Poço',
     guincho: 'Guincho',
-    sacada: 'Proteção de Sacada'
+    sacada: 'Proteção de Sacada',
+    afastador: 'Afastador SLQA'
 };
 
 function getApp(tipo) {
@@ -112,7 +113,8 @@ function getApp(tipo) {
         suporte: window.SuporteApp,
         grade: window.GradeApp,
         guincho: window.GuinchoApp,
-        sacada: window.SacadaApp
+        sacada: window.SacadaApp,
+        afastador: window.AfastadorApp
     }[tipo];
 }
 

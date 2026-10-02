@@ -20,6 +20,7 @@
         <button class="tab-btn" data-tab="grade">Grade de Poço</button>
         <button class="tab-btn" data-tab="guincho">Guincho</button>
         <button class="tab-btn" data-tab="sacada">Sacada</button>
+        <button class="tab-btn" data-tab="afastador">Afastador SLQA</button>
         <button class="tab-btn" data-tab="historico">Histórico</button>
         <button id="painel-toggle-btn" data-painel-toggle="painel-suporte">☰ Medidas</button>
         <div id="precoGlobal">
@@ -538,6 +539,85 @@
         <div id="canvas-sacada" class="canvas-container"></div>
     </div>
 
+    <!-- Afastador de suporte SLQA -->
+    <div id="view-afastador" class="view">
+        <div id="painel-afastador" class="painel">
+            <h3>Afastador de Suporte SLQA</h3>
+
+            <button id="btnRegularA" class="btn-salvar" style="background: #0288d1;">🔩 Demonstrar regulagem</button>
+
+            <div style="margin: 12px 0;">
+                <label>Avanço do parafuso (regulagem)</label>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #3498db; font-weight: bold;">
+                    <span>Avanço: <span id="lblAvancoA">0 mm</span></span>
+                    <span>Afastamento: <span id="lblAfastA">0 mm</span></span>
+                </div>
+                <input type="range" id="avancoA" min="0" max="80" value="30" step="1">
+            </div>
+
+            <h3>Medidas (mm)</h3>
+            <table class="tabela-parametros">
+                <tbody>
+                    <tr><td>Haste — comprimento</td><td><input type="number" id="compHasteA" value="150" step="5"></td></tr>
+                    <tr><td>Haste — lado (tubo oco)</td><td><input type="number" id="ladoHasteA" value="20"></td></tr>
+                    <tr><td>Haste — parede</td><td><input type="number" id="paredeHasteA" value="1.5" step="0.1"></td></tr>
+                    <tr><td>Chapa U — abertura</td><td><input type="number" id="aberturaUA" value="60"></td></tr>
+                    <tr><td>Chapa U — perna</td><td><input type="number" id="pernaUA" value="80"></td></tr>
+                    <tr><td>Chapa U — largura</td><td><input type="number" id="alturaUA" value="50"></td></tr>
+                    <tr><td>Chapa — espessura</td><td><input type="number" id="espChapaA" value="4.75" step="0.25"></td></tr>
+                    <tr><td>Chapa redonda — Ø</td><td><input type="number" id="diamDiscoA" value="50"></td></tr>
+                    <tr><td>Parafuso 1/2" — comprimento</td><td><input type="number" id="compParafusoA" value="100" step="5"></td></tr>
+                </tbody>
+            </table>
+
+            <h3>Preços</h3>
+            <table class="tabela-parametros">
+                <tbody>
+                    <tr><td>Barra 20×20 6m (R$)</td><td><input type="number" id="precoBarra20A" value="60.00" step="0.50" min="0"></td></tr>
+                    <tr><td>Chapa de aço (R$/kg)</td><td><input type="number" id="precoChapaKgA" value="10.00" step="0.50" min="0"></td></tr>
+                    <tr><td>Parafusaria (R$/peça)</td><td><input type="number" id="parafusariaA" value="12.00" step="0.50" min="0"></td></tr>
+                </tbody>
+            </table>
+            <p style="font-size: 11px; color: #7f8c8d; margin: 6px 0 0;">Parafusaria = parafuso 1/2" + porca soldada + parafuso 3/8" com porca. Galvanização usa o preço da barra de cima.</p>
+
+            <hr>
+
+            <h3>Quantidade</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="qtdAfast" style="margin: 0; flex: 1;">Qtd. de Afastadores:</label>
+                <input type="number" id="qtdAfast" value="20" min="1" style="width: 70px; padding: 4px;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                <label for="maoObraA" style="margin: 0; flex: 1;">Mão de obra (R$/peça):</label>
+                <input type="number" id="maoObraA" value="15" step="1" min="0" style="width: 70px; padding: 4px;">
+            </div>
+
+            <hr>
+
+            <h3>Consumo e Custo Estimado</h3>
+            <table class="tabela-parametros">
+                <thead>
+                    <tr><th>Componente</th><th>Por Peça</th><th>Total Pedido</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Tubo 20×20</td><td><span id="aMetros">0.00 m</span></td><td><b id="aMetrosQtd">0.00 m</b></td></tr>
+                    <tr class="linha-barras"><td>Barras (6m)</td><td><span>-</span></td><td><b id="aBarras" style="color: #2e7d32;">-</b></td></tr>
+                    <tr><td>Custo do tubo</td><td><span>-</span></td><td><b id="aCustoTubo">R$ 0,00</b></td></tr>
+                    <tr><td>Chapas (U + redonda)</td><td><span>-</span></td><td><b id="aCustoChapa">R$ 0,00</b></td></tr>
+                    <tr><td>Parafusaria</td><td><span>-</span></td><td><b id="aCustoParaf">R$ 0,00</b></td></tr>
+                    <tr class="linha-peso"><td>Peso do aço</td><td><span id="aPeso">0.000 kg</span></td><td><b id="aPesoQtd" style="color: #6a1b9a;">0.00 kg</b></td></tr>
+                    <tr class="linha-peso"><td>Galvanização (R$/kg)</td><td><span>-</span></td><td><b id="aCustoGalv" style="color: #6a1b9a;">R$ 0,00</b></td></tr>
+                    <tr class="linha-peso"><td>Mão de obra</td><td><span id="aMaoObraUnit">R$ 0,00</span></td><td><b id="aTotalMaoObra" style="color: #6a1b9a;">R$ 0,00</b></td></tr>
+                    <tr class="linha-custo"><td>Custo Total</td><td><span id="aCustoUnit">R$ 0,00</span></td><td><b id="aCustoTotal" style="color: #d35400;">R$ 0,00</b></td></tr>
+                </tbody>
+            </table>
+
+            <button class="btn-salvar" onclick="salvarOrcamentoAtual('afastador')">💾 Salvar Orçamento</button>
+            <button class="btn-salvar btn-projeto" onclick="exportarProjetoAfastador()">📐 Projeto Técnico (PDF)</button>
+        </div>
+        <div id="canvas-afastador" class="canvas-container"></div>
+    </div>
+
     <!-- Histórico de Orçamentos -->
     <div id="view-historico" class="view">
         <div class="historico-wrap">
@@ -571,6 +651,10 @@
         initCampoPersistente('maoObra', 'cadSuporte.maoObraSuporte', 100);
         initCampoPersistente('maoObraG', 'cadSuporte.maoObraGuincho', 100);
         initCampoPersistente('maoObraS', 'cadSuporte.maoObraSacada', 100);
+        initCampoPersistente('maoObraA', 'cadSuporte.maoObraAfastador', 15);
+        initCampoPersistente('precoBarra20A', 'cadSuporte.precoBarra20', 60);
+        initCampoPersistente('precoChapaKgA', 'cadSuporte.precoChapaKg', 10);
+        initCampoPersistente('parafusariaA', 'cadSuporte.parafusariaAfastador', 12);
         // Preço zerado salvo de versões antigas conta como "não definido" (usa o padrão novo)
         ['cadSuporte.precoRedeM2', 'cadSuporte.precoTapumeM2'].forEach(k => {
             if (parseFloat(localStorage.getItem(k)) === 0) localStorage.removeItem(k);
@@ -583,15 +667,16 @@
     <script src="js/grade.js"></script>
     <script src="js/guincho.js"></script>
     <script src="js/sacada.js"></script>
+    <script src="js/afastador.js"></script>
     <script src="js/projeto.js"></script>
     <script>
         const toggleBtn = document.getElementById('painel-toggle-btn');
-        const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho', sacada: 'painel-sacada' };
+        const APPS = { suporte: 'painel-suporte', grade: 'painel-grade', guincho: 'painel-guincho', sacada: 'painel-sacada', afastador: 'painel-afastador' };
         initTabs((aba) => {
             if (APPS[aba]) {
                 toggleBtn.dataset.painelToggle = APPS[aba];
                 toggleBtn.style.display = '';
-                const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp, sacada: window.SacadaApp }[aba];
+                const app = { suporte: window.SuporteApp, grade: window.GradeApp, guincho: window.GuinchoApp, sacada: window.SacadaApp, afastador: window.AfastadorApp }[aba];
                 requestAnimationFrame(() => { if (app && app.resize) app.resize(); });
             } else {
                 toggleBtn.style.display = 'none';
