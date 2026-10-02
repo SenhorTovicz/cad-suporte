@@ -787,3 +787,256 @@ function exportarProjetoSacada() {
     win.document.write(html);
     win.document.close();
 }
+
+// Gera o projeto técnico (prancha A4 paisagem) do AFASTADOR DE SUPORTE SLQA, com
+// as medidas atuais — peças cotadas em 1:1, conjunto montado em 1:2 com a faixa de
+// regulagem do afastamento, lista de material e carimbo editável.
+function exportarProjetoAfastador() {
+    // ---- Medidas em mm, lidas dos inputs atuais ----
+    const L = Math.round(lerNumInput('compHasteA'));
+    const lado = Math.round(lerNumInput('ladoHasteA'));
+    const parede = lerNumInput('paredeHasteA');
+    const abU = Math.round(lerNumInput('aberturaUA'));
+    const peU = Math.round(lerNumInput('pernaUA'));
+    const alU = Math.round(lerNumInput('alturaUA'));
+    const esp = lerNumInput('espChapaA');
+    const dD = Math.round(lerNumInput('diamDiscoA'));
+    const Lp = Math.round(lerNumInput('compParafusoA'));
+    const avMax = Math.max(Lp - 20, 0);
+    const av = Math.min(Math.round(lerNumInput('avancoA')), avMax);
+    const qtd = lerIntInput('qtdAfast');
+    const hP = 11, sP = 19, dPar = 12.7, eD = 4.75;
+    const afMin = Math.round(eD + hP + L + esp);
+    const afMax = afMin + avMax;
+    const afAtual = afMin + av;
+    const espTxt = String(esp).replace('.', ',');
+
+    // Pesos
+    const kgm = (b) => (b * b - Math.max(0, b - 2 * parede) ** 2) * 0.00785;
+    const pHaste = (L / 1000) * kgm(lado);
+    const pU = ((2 * peU + abU + 2 * esp) / 1000) * (alU / 1000) * (esp / 1000) * 7850;
+    const pD = Math.PI * (dD / 2000) ** 2 * (eD / 1000) * 7850;
+    const p1 = pHaste + pU + pD + 0.02;
+    const custoGalv = p1 * qtd * getPrecoGalv();
+
+    const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const r1 = (v) => Math.round(v * 100) / 100;
+
+    const svg = [];
+    const ln = (x1, y1, x2, y2, w, dash) =>
+        svg.push(`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" stroke="#000" stroke-width="${w || 0.35}"${dash ? ' stroke-dasharray="1.2,1"' : ''}/>`);
+    const rc = (x, y, w, h, sw, dash) =>
+        svg.push(`<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="none" stroke="#000" stroke-width="${sw || 0.35}"${dash ? ' stroke-dasharray="1.2,1"' : ''}/>`);
+    const ci = (x, y, r, sw, dash) =>
+        svg.push(`<circle cx="${r1(x)}" cy="${r1(y)}" r="${r1(r)}" fill="none" stroke="#000" stroke-width="${sw || 0.25}"${dash ? ' stroke-dasharray="1.2,1"' : ''}/>`);
+    const tx = (x, y, t, size, anchor, bold, rot) =>
+        svg.push(`<text x="${r1(x)}" y="${r1(y)}" font-size="${size || 2.8}" text-anchor="${anchor || 'middle'}" font-family="Arial, Helvetica, sans-serif"${bold ? ' font-weight="bold"' : ''}${rot ? ` transform="rotate(${rot} ${r1(x)} ${r1(y)})"` : ''}>${t}</text>`);
+    const dimLine = (x1, y1, x2, y2) =>
+        svg.push(`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" stroke="#000" stroke-width="0.16" marker-start="url(#seta)" marker-end="url(#seta)"/>`);
+    function dimH(x1, x2, y, label, ey) {
+        const d = y >= ey ? 1 : -1;
+        ln(x1, ey, x1, y + 1.2 * d, 0.16);
+        ln(x2, ey, x2, y + 1.2 * d, 0.16);
+        dimLine(x1, y, x2, y);
+        tx((x1 + x2) / 2, y - 1, label, 2.6);
+    }
+    function dimV(y1, y2, x, label, ex) {
+        const d = x >= ex ? 1 : -1;
+        ln(ex, y1, x + 1.2 * d, y1, 0.16);
+        ln(ex, y2, x + 1.2 * d, y2, 0.16);
+        dimLine(x, y1, x, y2);
+        tx(x - 1, (y1 + y2) / 2, label, 2.6, 'middle', false, -90);
+    }
+    function balao(px, py, bx, by, n) {
+        ln(px, py, bx, by, 0.16);
+        ci(bx, by, 2.2, 0.3);
+        tx(bx, by + 0.95, n, 2.7, 'middle', true);
+    }
+    function hexLado(x, yc, h, s) {           // porca vista de lado (3 faces)
+        rc(x, yc - s / 2, h, s, 0.35);
+        ln(x, yc - s / 4, x + h, yc - s / 4, 0.2);
+        ln(x, yc + s / 4, x + h, yc + s / 4, 0.2);
+    }
+    function edit(x, y, w, h, html, size, bold, align, multi) {
+        const just = align === 'center' ? 'center' : 'flex-start';
+        const style = multi
+            ? `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;line-height:1.62;`
+            : `font:${bold ? '700' : '400'} ${size}px Arial,sans-serif;display:flex;align-items:center;justify-content:${just};${align === 'center' ? 'text-align:center;' : ''}`;
+        svg.push(`<foreignObject x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}"><div xmlns="http://www.w3.org/1999/xhtml" contenteditable="true" class="ed" style="width:100%;height:100%;overflow:hidden;${style}">${html}</div></foreignObject>`);
+    }
+
+    // ================= FOLHA =================
+    rc(4, 4, 289, 202, 0.7);
+    rc(7, 7, 283, 196, 0.35);
+
+    // Escala das peças: 1:2 no padrão; encolhe se a haste/parafuso crescerem
+    const s = Math.min(0.5, 82 / Math.max(L, 1), 52 / Math.max(Lp, 1), 42 / Math.max(peU, 1));
+    const larg = abU + 2 * esp;
+
+    // ============ PEÇA 1 — HASTE OCA c/ PORCA SOLDADA ============
+    const h1x = 22, h1y = 25;
+    hexLado(h1x - hP * s, h1y, hP * s, sP * s);                       // porca soldada
+    rc(h1x, h1y - lado * s / 2, L * s, lado * s);                      // haste
+    ln(h1x, h1y - (lado / 2 - parede) * s, h1x + L * s, h1y - (lado / 2 - parede) * s, 0.14, true);
+    ln(h1x, h1y + (lado / 2 - parede) * s, h1x + L * s, h1y + (lado / 2 - parede) * s, 0.14, true);
+    dimH(h1x, h1x + L * s, h1y - lado * s / 2 - 5, L, h1y - lado * s / 2);
+    dimV(h1y - lado * s / 2, h1y + lado * s / 2, h1x + L * s + 5, lado, h1x + L * s);
+    ln(h1x - hP * s / 2, h1y + sP * s / 2, h1x + 4, h1y + 10, 0.16);
+    tx(h1x + 5, h1y + 11.5, 'porca 1/2" soldada', 2.2, 'start');
+    const sx0 = h1x + L * s + 14;                                      // seção (quadrado oco)
+    rc(sx0, h1y - lado * s / 2, lado * s, lado * s, 0.45);
+    rc(sx0 + parede * s, h1y - lado * s / 2 + parede * s, (lado - 2 * parede) * s, (lado - 2 * parede) * s, 0.25);
+    tx(sx0 + lado * s / 2, h1y + lado * s / 2 + 4, 'seção', 2.2);
+    tx(65, h1y + 18, `PEÇA 1 — HASTE (1x) — Tubo ${lado}×${lado}×${String(parede).replace('.', ',')} oco`, 2.7, 'middle', true);
+    tx(65, h1y + 21.5, 'oca: a rosca do parafuso entra por dentro ao regular', 2.3);
+
+    // ============ PEÇA 4 — TRAVA (parafuso 3/8" + porca) ============
+    const p4x = 22, p4y = 60;
+    const compTr = (larg + 18) * s;
+    rc(p4x, p4y - 3, 2.4, 6, 0.35);                                    // cabeça
+    rc(p4x + 2.4, p4y - 1.2, compTr, 2.4, 0.3);                        // corpo
+    hexLado(p4x + 2.4 + compTr - 6, p4y, 2.6, 6);                      // porca
+    tx(p4x + compTr / 2 + 30, p4y - 1, 'PEÇA 4 — PARAF. 3/8" + PORCA (1x)', 2.6, 'start', true);
+    tx(p4x + compTr / 2 + 30, p4y + 2.6, 'passa nos furos do U, por trás do suporte', 2.3, 'start');
+
+    // ============ PEÇA 3 — PARAFUSO 1/2" c/ CHAPA REDONDA ============
+    const p3x = 140, p3y = 28;
+    rc(p3x, p3y - dD * s / 2, eD * s, dD * s, 0.45);                   // chapa redonda (de lado)
+    rc(p3x + eD * s, p3y - dPar * s / 2, Lp * s, dPar * s, 0.35);      // parafuso
+    for (let x = p3x + eD * s + 1.2; x < p3x + (eD + Lp) * s - 0.6; x += 1.1) ln(x, p3y - dPar * s / 2, x + 0.6, p3y + dPar * s / 2, 0.1);
+    dimH(p3x + eD * s, p3x + (eD + Lp) * s, p3y - dD * s / 2 - 3, Lp, p3y - dPar * s / 2);
+    dimV(p3y - dD * s / 2, p3y + dD * s / 2, p3x - 4, `Ø${dD}`, p3x);
+    const fcx = p3x + (eD + Lp) * s + 20;                              // chapa redonda de frente
+    ci(fcx, p3y, dD * s / 2, 0.45);
+    ci(fcx, p3y, dPar * s / 2, 0.3);
+    tx(fcx, p3y + dD * s / 2 + 3.5, 'de frente', 2.2);
+    tx(178, p3y + dD * s / 2 + 9, `PEÇA 3 — PARAFUSO 1/2" × ${Lp} (1x)`, 2.7, 'middle', true);
+    tx(178, p3y + dD * s / 2 + 12.5, `c/ chapa redonda Ø${dD} × 4,75 soldada na ponta`, 2.3);
+
+    // ============ PEÇA 2 — CHAPA U (vista de topo + lateral da perna) ============
+    const uX = 244, uY = 15;
+    rc(uX, uY, esp * s, larg * s, 0.35);                               // fundo do U
+    rc(uX, uY, peU * s, esp * s, 0.35);                                // pernas
+    rc(uX, uY + (larg - esp) * s, peU * s, esp * s, 0.35);
+    const xF = uX + (peU - 12) * s;
+    ln(xF, uY - 1.5, xF, uY + larg * s + 1.5, 0.14, true);             // eixo do furo
+    dimH(uX, uX + peU * s, uY + larg * s + 5, peU, uY + larg * s);
+    dimV(uY + esp * s, uY + (larg - esp) * s, uX - 4, abU, uX);
+    dimH(xF, uX + peU * s, uY - 3.5, 12, uY);
+    const lY = uY + larg * s + 11;                                     // lateral da perna
+    rc(uX, lY, peU * s, alU * s, 0.35);
+    ci(xF, lY + alU * s / 2, 5 * s, 0.3);
+    dimV(lY, lY + alU * s, uX - 4, alU, uX);
+    ln(xF, lY + alU * s / 2 - 2.5, xF - 6, lY - 2, 0.16);
+    tx(xF - 6.5, lY - 2.6, 'Ø10', 2.3, 'end');
+    tx(262, lY + alU * s + 6, `PEÇA 2 — CHAPA U ${abU}×${peU}`, 2.7, 'middle', true);
+    tx(262, lY + alU * s + 9.5, `chapa ${espTxt} × ${alU} • 2 furos Ø10`, 2.3);
+
+    // ============ CONJUNTO — VISTA SUPERIOR MONTADO ============
+    const c = s, cy = 122;
+    const xLaje = 32;
+    rc(xLaje - 10, cy - 22, 10, 44, 0.35);                             // laje / prédio
+    for (let y = cy - 20; y < cy + 22; y += 3) ln(xLaje - 10, y + 2.5, xLaje - 1.5, y - 2, 0.12);
+    tx(xLaje - 5, cy + 26.5, 'laje', 2.3);
+    let x = xLaje;
+    rc(x, cy - dD * c / 2, eD * c, dD * c, 0.4); x += eD * c;           // chapa redonda
+    rc(x, cy - dPar * c / 2, Lp * c, dPar * c, 0.3);                    // parafuso
+    x += av * c;
+    hexLado(x, cy, hP * c, sP * c); x += hP * c;                         // porca
+    const xH0 = x;
+    rc(x, cy - lado * c / 2, L * c, lado * c, 0.4); x += L * c;          // haste
+    const xU = x;
+    rc(xU, cy - larg * c / 2, esp * c, larg * c, 0.4);                   // U
+    rc(xU, cy - larg * c / 2, peU * c, esp * c, 0.4);
+    rc(xU, cy + larg * c / 2 - esp * c, peU * c, esp * c, 0.4);
+    const ladoS = Math.max(10, Math.min(50, abU - 4, peU - 12 - 5 - esp - 2));
+    rc(xU + esp * c, cy - ladoS * c / 2, ladoS * c, ladoS * c, 0.3, true); // suporte SLQA
+    tx(xU + (esp + ladoS / 2) * c, cy + 1, 'SLQA', 2.1);
+    const xT = xU + (peU - 12) * c;
+    rc(xT - 2.4 * c, cy - larg * c / 2 - 4, 4.8 * c, larg * c + 8, 0.3); // trava 3/8"
+    dimH(xLaje, xU + esp * c, cy - 26, `${afAtual} (regula de ${afMin} a ${afMax})`, cy - dD * c / 2);
+    balao(xLaje + 1, cy + dD * c / 2 - 1, xLaje + 7, cy + 20, '3');
+    balao(xH0 + L * c / 2, cy + lado * c / 2, xH0 + L * c / 2 - 6, cy + 18, '1');
+    balao(xU + peU * c * 0.7, cy + larg * c / 2, xU + peU * c * 0.7 + 8, cy + 20, '2');
+    balao(xT, cy + larg * c / 2 + 4, xT + 12, cy + 12, '4');
+    tx(115, 84, `CONJUNTO MONTADO — VISTA SUPERIOR • avanço atual do parafuso: ${av} mm`, 2.8, 'middle', true);
+    tx(115, 88, 'Gire o parafuso: a chapa redonda empurra a laje e afasta o suporte do prédio', 2.4);
+    tx(245, 120, '1 = Haste   2 = Chapa U', 2.4, 'start');
+    tx(245, 124, '3 = Parafuso 1/2" + chapa Ø50', 2.4, 'start');
+    tx(245, 128, '4 = Trava 3/8" + porca', 2.4, 'start');
+
+    // ============ PARTE DE BAIXO (toda EDITÁVEL) ============
+    rc(7, 160, 90, 43);
+    tx(10, 166, 'Obs:', 3.2, 'start', true);
+    edit(9.5, 168, 85.5, 34,
+        'Afastador p/ suporte SLQA: o U abraça o suporte e o parafuso de 3/8" trava por trás.<br/>' +
+        `Regulagem: girar o parafuso 1/2" — afastamento de ${afMin} a ${afMax} mm.<br/>` +
+        'A chapa redonda Ø50 apoia na face da laje/viga, sem furar.<br/>' +
+        'Porca 1/2" soldada em todo o contorno na ponta da haste.<br/>' +
+        'Galvanização a fogo após solda e furação.', 2.5, false, 'left', true);
+
+    rc(97, 160, 70, 43);
+    tx(100, 166, 'Lista de material (por peça):', 3.2, 'start', true);
+    edit(99.5, 168, 65.5, 34,
+        `Tubo ${lado}×${lado}×${String(parede).replace('.', ',')} — ${L} mm (${pHaste.toFixed(2)} kg)<br/>` +
+        `Chapa U ${abU}×${peU}×${alU} × ${espTxt} mm (${pU.toFixed(2)} kg)<br/>` +
+        `Chapa redonda Ø${dD} × 4,75 mm (${pD.toFixed(2)} kg)<br/>` +
+        `Parafuso 1/2" × ${Lp} + porca 1/2" • Paraf. 3/8" + porca<br/>` +
+        `<b>Peso do aço ≈ ${p1.toFixed(2)} kg/pç • ${qtd} pç = ${(p1 * qtd).toFixed(1)} kg</b><br/>` +
+        `<b>Galvanização ≈ ${formatBRL(custoGalv)} (${formatBRL(getPrecoGalv())}/kg)</b>`, 2.4, false, 'left', true);
+
+    rc(167, 160, 45, 43);
+    ln(167, 166, 212, 166, 0.25); ln(167, 172, 212, 172, 0.25); ln(167, 178, 212, 178, 0.25); ln(167, 184, 212, 184, 0.25);
+    ln(185, 160, 185, 184, 0.25); ln(199, 160, 199, 184, 0.25);
+    tx(192, 164.4, 'Nome', 2.4); tx(205.5, 164.4, 'Data', 2.4);
+    tx(169, 170.4, 'Desenho', 2.4, 'start');
+    tx(169, 176.4, 'Checado', 2.4, 'start');
+    tx(169, 182.4, 'Aprovado', 2.4, 'start');
+    edit(185.5, 166.3, 13, 5.4, 'Lenon', 2.4, false, 'center');
+    edit(199.5, 166.3, 12, 5.4, hoje, 2.2, false, 'center');
+    edit(185.5, 172.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 172.3, 12, 5.4, '', 2.2, false, 'center');
+    edit(185.5, 178.3, 13, 5.4, '', 2.4, false, 'center');
+    edit(199.5, 178.3, 12, 5.4, '', 2.2, false, 'center');
+    ln(167, 190.5, 212, 190.5, 0.25); ln(167, 196.5, 212, 196.5, 0.25);
+    edit(168.5, 184.5, 42, 5.6, `Escala: 1:${Math.round(1 / s)}`, 2.5);
+    edit(168.5, 190.8, 42, 5.4, 'Unidade: mm', 2.5);
+    edit(168.5, 196.8, 42, 5.8, `Quantidade: ${qtd} pç`, 2.5);
+
+    rc(212, 160, 78, 43);
+    ln(212, 170, 290, 170, 0.35);
+    ln(212, 178, 290, 178, 0.35);
+    ln(212, 185, 290, 185, 0.35);
+    ln(212, 190, 290, 190, 0.35);
+    ln(212, 196, 290, 196, 0.35);
+    ln(254, 196, 254, 203, 0.35);
+    edit(213, 160.6, 76, 9, '', 6, true, 'center');
+    edit(213.5, 170.4, 76, 7.2, 'Obra: Afastador de suporte SLQA', 3.1, true);
+    edit(213.5, 178.3, 76, 6.4, 'Desenho: Afastador regulável c/ chapa U', 2.8, true);
+    edit(213.5, 185.2, 76, 4.6, 'Endereço obra:', 2.3);
+    edit(213.5, 190.3, 76, 5.4, 'Engenheiro: ______________  CREA: ______', 2.5);
+    edit(213.5, 196.4, 39.5, 6.2, 'CNO:', 2.5);
+    edit(255, 196.4, 34, 6.2, 'Prancha: 1/1', 2.7, true, 'center');
+
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" width="297mm" height="210mm">
+<defs><marker id="seta" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="3.4" markerHeight="3.4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0.7 L5.5,3 L0,5.3 Z"/></marker></defs>
+<rect x="0" y="0" width="297" height="210" fill="#fff"/>${svg.join('\n')}</svg>`;
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>Projeto Técnico — Afastador SLQA</title>
+<style>@page{size:A4 landscape;margin:0}body{margin:0;background:#7f8c8d}
+.folha{width:297mm;height:210mm;background:#fff;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.45)}
+.folha svg{display:block}
+.no-print{position:fixed;top:12px;right:14px;padding:11px 18px;background:#27ae60;color:#fff;border:none;border-radius:6px;font:600 14px Arial;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ed{outline:none;cursor:text}
+.ed:hover{background:rgba(41,128,185,.12)}
+.ed:focus{background:rgba(241,196,15,.18)}
+@media print{body{background:#fff}.folha{box-shadow:none}.no-print{display:none}.ed:hover,.ed:focus{background:none}}</style></head>
+<body><button class="no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+<div class="folha">${svgStr}</div></body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { window.alert('O navegador bloqueou a janela do projeto. Permita pop-ups para este site.'); return; }
+    win.document.write(html);
+    win.document.close();
+}
